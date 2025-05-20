@@ -3,4 +3,7 @@ Run CalSim_DSS_Reader on the needed CalSim3 output DSS files prior to running th
 Place output of the CalSim_DSS_Reader in the Visualizer Folder before running the Visualizer code.
 
 # To Launch a Run
-python -m panel serve cs3_viz_app_main.py
+python cs3_viz_app_main.py
+
+# To compile executable 
+pyinstaller --clean -F --additional-hooks-dir=. --add-data TR_fields.txt:. cs3_viz_app_main.py
