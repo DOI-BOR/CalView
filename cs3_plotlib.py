@@ -61,6 +61,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units_al
     return df_plot.hvplot(
         x='Date',
         ylabel=unit_choice,
+        grid=True,
         min_height=600,
         #ylim=(df_plot[keeplist].min().min(), df_plot[keeplist].max().max())
     )
@@ -134,7 +135,9 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         df_grouped = df_wide.groupby(by=[period_choice]).sum()
         df_plot = df_grouped[keeplist]
         return df_plot.hvplot(
-            min_height=600, ylabel=unit_choice
+            min_height=600,
+            grid=True,
+            ylabel=unit_choice
         )
 
     # selected a month
@@ -146,6 +149,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         df_plot = df_grouped[keeplist]
         return df_plot.hvplot(
             min_height=600, xlabel='Year', ylabel=unit_choice,
+            grid=True,
             legend="bottom"
         )
 
@@ -238,7 +242,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         # print(scenario_list)
         # print(var_list)
         return df_exceed.hvplot(
-            min_height=600, ylabel=unit_choice
+            min_height=600, ylabel=unit_choice, grid=True
         )
 
     # month choice
@@ -268,7 +272,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         # print(scenario_list)
         # print(var_list)
         return df_exceed.hvplot(
-            min_height=600, ylabel=unit_choice
+            min_height=600, ylabel=unit_choice, grid=True
         )
 
 def plot_single_var(df, period_choice, variable, scenario_list,
@@ -344,7 +348,8 @@ def plot_single_var(df, period_choice, variable, scenario_list,
             ylower = np.min(df_stats)*1.1
 
         return df_stats.hvplot.bar(color='#00809e', title=variable+' '+stat_choice,
-                                   ylabel=units_choice, ylim=(ylower,np.max(df_stats)*1.1), min_height=600)
+                                   ylabel=units_choice, ylim=(ylower,np.max(df_stats)*1.1),
+                                   grid=True, min_height=600)
 
     # Month chosen
     else:
@@ -363,7 +368,9 @@ def plot_single_var(df, period_choice, variable, scenario_list,
             df_stats = df_plot.max()
 
         return df_stats.hvplot.bar(color='#00809e', title=variable + ' ' + stat_choice,
-                                   ylabel=units_choice, min_height=600)
+                                   grid=True,
+                                   ylabel=units_choice,
+                                   min_height=600)
 
 def run_operation(df, op_choice):
     #If user selects scenario that has been previously run, grab pickle files
