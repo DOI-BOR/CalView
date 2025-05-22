@@ -164,6 +164,8 @@ def add_run_names_widget(event):
                 field_column.append(error_message)
                 field_col_tracker.append("error_message")
                 return
+            # no need for fields section, just start pulling the files
+            update_run_names(event)
 
         #Also add optional field add text box
         add_field_instructions = pn.pane.Markdown("""
