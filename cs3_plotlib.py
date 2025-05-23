@@ -301,7 +301,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, max_height=500))
+            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
@@ -312,7 +312,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, max_height=500))
+            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     # month choice
     else:
@@ -351,7 +351,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, max_height=500))
+            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
@@ -362,7 +362,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, max_height=500))
+            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
 def plot_single_var(df_all, period_choice, variable, scenario_list,
                     units_choice, stat_choice, c_default_units):
