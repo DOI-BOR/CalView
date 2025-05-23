@@ -13,6 +13,7 @@ def get_vars_list(ls_vars, s_default):
 def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units_all):
 
     df_all_plot = df_all.copy(deep=True)
+    df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
 
     # check if Baseline is in the data frame
@@ -86,6 +87,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units_all, period_choice):
 
     df_all_plot = df_all.copy(deep=True)
+    df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
 
     # check if Baseline is in the data frame
@@ -202,6 +204,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units_all, period_choice):
 
     df_all_plot = df_all.copy(deep=True)
+    df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
 
     # check if Baseline is in the data frame
@@ -368,6 +371,7 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
                     units_choice, stat_choice, c_default_units):
 
     df_all_plot = df_all.copy(deep=True)
+    df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all['Date']]
 
     # check if Baseline is in the data frame
