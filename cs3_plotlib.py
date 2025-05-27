@@ -61,7 +61,6 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units_al
         df_wide[col_names] = df_temp[col_names]
         for name in col_names:
             keeplist.append(name)
-        debug = True
 
     df_plot = df_wide.drop([var for var in df_wide if var not in keeplist])
 
@@ -371,7 +370,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 grid=True
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
-def plot_single_var(df_all, period_choice, variable, scenario_list,
+def plot_single_var(df_all, period_choice, var_list, scenario_list,
                     units_choice, stat_choice, c_default_units, s_comparison):
 
     df_all_plot = df_all.copy(deep=True)
@@ -383,29 +382,35 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
     if s_comparison not in df_all.Scenario.unique():
         scenario_list = [scen for scen in scenario_list if scen != s_comparison]
 
+    # check if no scenarios are selected
     if len(scenario_list) == 0:
         return
 
+    # check if no variables are selected
+    if len(var_list) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
     # to convert from cfs to taf or vice versa
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
     # Unit conversion
-    try:
-        original_unit = c_default_units[variable].strip()
-    except:
-        original_unit = None
+    for var in var_list:
+        try:
+            original_unit = c_default_units[var].strip()
+        except:
+            original_unit = None
 
-    if original_unit not in ['CFS', 'TAF']:
-        pass
-    elif original_unit == units_choice:
-        pass
-    elif original_unit == 'CFS':
-        df_all_plot[variable] = \
-            np.multiply(df_all_plot[variable], cfs_taf)
-    elif original_unit == 'TAF':
-        df_all_plot[variable] = \
-            np.multiply(df_all_plot[variable], taf_cfs)
+        if original_unit not in ['CFS', 'TAF']:
+            pass
+        elif original_unit == units_choice:
+            pass
+        elif original_unit == 'CFS':
+            df_all_plot[var] = \
+                np.multiply(df_all_plot[var], cfs_taf)
+        elif original_unit == 'TAF':
+            df_all_plot[var] = \
+                np.multiply(df_all_plot[var], taf_cfs)
+
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
     df_wide[['WY', 'DY', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['WY', 'DY', 'Month']].reset_index(drop=True)
@@ -413,14 +418,23 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
 
     keeplist = []
 
-    for scenario in scenario_list:
-        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[variable]]
-        df_temp.reset_index(inplace=True, drop=True)
-        col_names = [f'{scenario}: {variable}']
-        df_temp.columns = col_names
-        df_wide[col_names] = df_temp[col_names]
-        for name in col_names:
-            keeplist.append(name)
+    # for scenario in scenario_list:
+    #     df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list]
+    #     df_temp.reset_index(inplace=True, drop=True)
+    #     col_names = [f'{scenario}: {var}' for var in var_list]
+    #     df_temp.columns = col_names
+    #     df_wide[col_names] = df_temp[col_names]
+    #     for name in col_names:
+    #         keeplist.append(name)
+
+    for var in var_list:
+        for index, scenario in enumerate(scenario_list):
+            df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[var]]
+            df_temp.reset_index(inplace=True, drop=True)
+            col_names = [f'{scenario}: {var}']
+            df_temp.columns = col_names
+            df_wide[col_names] = df_temp[col_names]
+            keeplist.append(col_names[0])
 
     # ------- Agg ops below -------------
     if period_choice in ['WY', 'DY', 'CY']:
@@ -438,6 +452,7 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
         # calculate chosen stat
         if stat_choice == 'Average':
             df_stats = df_plot.mean()
+            df_stats.name = 'Average'
         elif stat_choice == 'Minimum':
             df_stats = df_plot.min()
         else:
@@ -456,23 +471,20 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
             return pn.Column(
-                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(title=variable+' '+stat_choice,
-                                                      ylabel=units_choice, ylim=(y_lower, y_upper),
-                                                      grid=True, min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
-                pn.pane.DataFrame(df_stats, max_height=500))
+                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(title='',
+                                                                                                      ylabel=units_choice, ylim=(y_lower, y_upper),
+                                                                                                      grid=True, min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(
-                pn.pane.HoloViews(df_stats.hvplot.bar(title=variable + ' ' + stat_choice,
-                                                      ylabel=units_choice, ylim=(y_lower, y_upper),
+                pn.pane.HoloViews(df_stats.hvplot.bar(title='', ylabel=units_choice, ylim=(y_lower, y_upper),
                                                       grid=True, min_height=600), sizing_mode='stretch_width', linked_axes=False),
-                pn.pane.DataFrame(df_stats, max_height=500))
+                pn.pane.DataFrame(df_plot, max_height=500))
 
     # Month chosen
     else:
         df_wide = df_wide[df_wide.Month == period_choice]
-        # Can't sum dates: drop
-        df_wide = df_wide.drop('Date', axis=1)
-        df_grouped = df_wide.groupby(by=['DY']).sum()
+        df_grouped = df_wide.groupby(by=['Date']).sum()
         df_plot = df_grouped[keeplist]
 
         # calculate chosen stat
@@ -496,21 +508,21 @@ def plot_single_var(df_all, period_choice, variable, scenario_list,
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
             return pn.Column(
-                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(title=variable + ' ' + stat_choice,
-                                                                                                      grid=True,
+                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
+                                                                                                      title='', grid=True,
                                                                                                       ylabel=units_choice,
                                                                                                       ylim=(y_lower, y_upper),
                                        min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
-                pn.pane.DataFrame(df_stats, max_height=500))
+                pn.pane.DataFrame(df_plot, max_height=500))
 
         else:
             return pn.Column(
-                pn.pane.HoloViews(df_stats.hvplot.bar(title=variable + ' ' + stat_choice,
-                                                      grid=True,
+                pn.pane.HoloViews(df_stats.hvplot.bar(
+                                                      title='', grid=True,
                                                       ylabel=units_choice,
                                                       ylim=(y_lower, y_upper),
                                                       min_height=600), sizing_mode='stretch_width', linked_axes=False),
-                pn.pane.DataFrame(df_stats, max_height=500))
+                pn.pane.DataFrame(df_plot, max_height=500))
 
 def run_operation(df, op_choice):
     #If user selects scenario that has been previously run, grab pickle files

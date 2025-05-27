@@ -304,20 +304,22 @@ def update_run_names(event):
     for _ in range(len(file_picker_display)):
         file_picker_display.pop(0)
 
-def create_plot_title(s_title, s_comparison, period):
+def create_plot_title(s_title, s_comparison, s_period, s_stat=''):
     """
     To create the titles for the plots that change when values are updated
     """
     c_period_code_to_name = {"DY": "January-December", "WY": "October-September", "CY": "March-February",
                              1: "January", 2: "February", 3: "March", 4: "April",
                              5: "May", "June": 6, 7: "July", 8: "August",
-                             9: "September", 10: "October", 11: "November", 12: "December"
-                             }
-    s_final_title = "# " + s_title
+                             9: "September", 10: "October", 11: "November", 12: "December"}
+    if s_stat:
+        s_final_title = "# " + s_stat + ' Value ' + s_title
+    else:
+        s_final_title = "# " + s_title
     if s_comparison:
         s_final_title += " (Difference from " + s_comparison + ")"
-    if period:
-        s_final_title += " (" + c_period_code_to_name[period] + ")"
+    if s_period:
+        s_final_title += " (" + c_period_code_to_name[s_period] + ")"
     return pn.pane.Markdown(s_final_title)
 def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_diffs):
     global single_var_plots
@@ -355,23 +357,18 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         width=200
     )
 
-    # Select a single
-    single_var_selector = pn.widgets.Select(
-        name='Single variable selector',
-        options=var_names,
-        value=var_names[0]
-    )
     # Select the variables
     var_selector = pn.widgets.MultiChoice(
         name='Variable selector',
         options=var_names,
-        value=[single_var_selector.value],
+        value=[var_names[0]],
         width=400
     )
 
     stat_sel = pn.widgets.Select(
         name='Statistic selector',
-        options=['Average', 'Minimum', 'Maximum']
+        options=['Average', 'Minimum', 'Maximum'],
+        width=400
     )
 
     # 20241223: Create different dataframes for each function call
@@ -453,7 +450,7 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         plot_single_var,
         df_all=df_all_data,
         period_choice=period_selector,
-        variable=single_var_selector,
+        var_list=var_selector,
         scenario_list=scen_selector,
         units_choice=unit_selector,
         stat_choice=stat_sel,
@@ -465,7 +462,7 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         plot_single_var,
         df_all=df_diffs,
         period_choice=period_selector,
-        variable=single_var_selector,
+        var_list=var_selector,
         scenario_list=scen_selector,
         units_choice=unit_selector,
         stat_choice=stat_sel,
@@ -481,34 +478,36 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
                                       )
 
     grouped_title = pn.bind(create_plot_title,
-                             s_title="Time-Aggregated Plot",
-                             s_comparison='',
-                             period=period_selector)
+                            s_title="Time-Aggregated Plot",
+                            s_comparison='',
+                            s_period=period_selector)
 
     grouped__diff_title = pn.bind(create_plot_title,
-                             s_title="Time-Aggregated Plot",
-                             s_comparison=s_comparison,
-                             period=period_selector)
+                            s_title="Time-Aggregated Plot",
+                            s_comparison=s_comparison,
+                            s_period=period_selector)
 
     exceedance_title = pn.bind(create_plot_title,
-                             s_title="Exceedance Plot",
-                             s_comparison='',
-                             period=period_selector)
+                               s_title="Exceedance Plot",
+                               s_comparison='',
+                               s_period=period_selector)
 
     exceedance_diff_title = pn.bind(create_plot_title,
                              s_title="Exceedance Plot",
                              s_comparison=s_comparison,
-                             period=period_selector)
+                             s_period=period_selector)
 
     single_var_title = pn.bind(create_plot_title,
-                             s_title="Single Variable Comparison",
-                             s_comparison='',
-                             period=period_selector)
+                               s_title="Bar Plot",
+                               s_comparison='',
+                               s_period=period_selector,
+                               s_stat=stat_sel)
 
     single_var_diff_title = pn.bind(create_plot_title,
-                             s_title="Single Variable Comparison",
-                             s_comparison=s_comparison,
-                             period=period_selector)
+                                    s_title="Bar Plot",
+                                    s_comparison=s_comparison,
+                                    s_period=period_selector,
+                                    s_stat=stat_sel)
 
     #Add selectors to header row in template and refresh objects
     header.append(scen_selector)
@@ -517,7 +516,7 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
     header.append(unit_selector)
     header.param.trigger("objects")
 
-    single_var_widgets = pn.Row(single_var_selector, stat_sel, width=750)
+    single_var_widgets = pn.Row(stat_sel)
 
     single_var_plots.append(single_var_widgets)
     single_var_plots.append(pn.Row(pn.Column(single_var_title,bound_single_var_plot),pn.Column(single_var_diff_title,bound_single_var_diff_plot)))
@@ -532,7 +531,7 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
     exceedance_plots.append(pn.Column(exceedance_diff_title, bound_plot_diffs_exceedance))
 
     tabs = pn.Tabs(
-        ('Single Variable', single_var_plots),
+        ('Bar Plot', single_var_plots),
         ('Timeseries', timeseries_plots),
         ('Time-Aggregated', grouped_plots),
         ('Exceedance', exceedance_plots))
