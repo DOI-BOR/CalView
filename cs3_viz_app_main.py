@@ -304,7 +304,21 @@ def update_run_names(event):
     for _ in range(len(file_picker_display)):
         file_picker_display.pop(0)
 
-
+def create_plot_title(s_title, s_comparison, period):
+    """
+    To create the titles for the plots that change when values are updated
+    """
+    c_period_code_to_name = {"DY": "January-December", "WY": "October-September", "CY": "March-February",
+                             1: "January", 2: "February", 3: "March", 4: "April",
+                             5: "May", "June": 6, 7: "July", 8: "August",
+                             9: "September", 10: "October", 11: "November", 12: "December"
+                             }
+    s_final_title = "# " + s_title
+    if s_comparison:
+        s_final_title += " (Difference from " + s_comparison + ")"
+    if period:
+        s_final_title += " (" + c_period_code_to_name[period] + ")"
+    return pn.pane.Markdown(s_final_title)
 def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_diffs):
     global single_var_plots
     global grouped_plots
@@ -322,13 +336,6 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         width=400
     )
 
-    # Select the variables
-    var_selector = pn.widgets.MultiChoice(
-        name='Variable selector',
-        options=var_names,
-        # value=[var_names[0]],
-        width=400
-    )
 
     unit_selector = pn.widgets.RadioButtonGroup(
         name='Units selector',
@@ -341,7 +348,7 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
 
     period_selector = pn.widgets.Select(
         name='Period selector',
-        options={"Water Year": "WY", "Calendar Year": "DY", "Contract Year": "CY",
+        options={"January-December": "DY", "October-September": "WY", "March-February": "CY",
                  "January": 1, "February": 2, "March": 3, "April": 4,
                  "May": 5, "June": 6, "July": 7, "August": 8,
                  "September": 9, "October": 10, "November": 11, "December": 12},
@@ -354,13 +361,12 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         options=var_names,
         value=var_names[0]
     )
-
-    month_sel = pn.widgets.Select(
-        name='Month selector',
-        options=[
-            "January", "February", "March", "April",
-            "May", "June", "July", "August",
-            "September", "October", "November", "December"]
+    # Select the variables
+    var_selector = pn.widgets.MultiChoice(
+        name='Variable selector',
+        options=var_names,
+        value=[single_var_selector.value],
+        width=400
     )
 
     stat_sel = pn.widgets.Select(
@@ -467,37 +473,42 @@ def create_widgets(scenario_names, var_names, df_all_data, c_default_units, df_d
         s_comparison=s_comparison
     )
 
-    ts_title = pn.pane.Markdown("""
-        # Timeseries Plot
-    """)
 
-    diffs_ts_title = pn.pane.Markdown("""
-        # Timeseries Plot (Difference from """ + s_comparison + ")"
+    ts_title = pn.pane.Markdown("# Timeseries Plot"
+                                )
+
+    diffs_ts_title = pn.pane.Markdown("# Timeseries Plot (Difference from " + s_comparison + ")"
                                       )
 
-    grouped_title = pn.pane.Markdown("""
-        # Time-Aggregated Plot
-    """)
+    grouped_title = pn.bind(create_plot_title,
+                             s_title="Time-Aggregated Plot",
+                             s_comparison='',
+                             period=period_selector)
 
-    grouped__diff_title = pn.pane.Markdown("""
-        # Time-Aggregated Plot (Difference from """ + s_comparison + ")"
-                                           )
+    grouped__diff_title = pn.bind(create_plot_title,
+                             s_title="Time-Aggregated Plot",
+                             s_comparison=s_comparison,
+                             period=period_selector)
 
-    exceedance_title = pn.pane.Markdown("""
-        # Exceedance Plot 
-    """)
+    exceedance_title = pn.bind(create_plot_title,
+                             s_title="Exceedance Plot",
+                             s_comparison='',
+                             period=period_selector)
 
-    exceedance_diff_title = pn.pane.Markdown("""
-        # Exceedance Plot (Difference from """ + s_comparison + ")"
-                                             )
+    exceedance_diff_title = pn.bind(create_plot_title,
+                             s_title="Exceedance Plot",
+                             s_comparison=s_comparison,
+                             period=period_selector)
 
-    single_var_title = pn.pane.Markdown("""
-        # Single Variable Comparison
-    """)
+    single_var_title = pn.bind(create_plot_title,
+                             s_title="Single Variable Comparison",
+                             s_comparison='',
+                             period=period_selector)
 
-    single_var_diff_title = pn.pane.Markdown("""
-        # Single Variable Comparison (Difference from """ + s_comparison + ")"
-                                             )
+    single_var_diff_title = pn.bind(create_plot_title,
+                             s_title="Single Variable Comparison",
+                             s_comparison=s_comparison,
+                             period=period_selector)
 
     #Add selectors to header row in template and refresh objects
     header.append(scen_selector)
