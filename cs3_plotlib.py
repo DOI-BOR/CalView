@@ -489,12 +489,11 @@ def plot_single_var(df_all, period_choice, var_list, scenario_list,
 
         # calculate chosen stat
         if stat_choice == 'Average':
-            df_stats = df_plot.mean()
-            df_stats.name = 'Average'
+            df_stats = df_plot.mean().to_frame()
         elif stat_choice == 'Minimum':
-            df_stats = df_plot.min()
+            df_stats = df_plot.min().to_frame()
         else:
-            df_stats = df_plot.max()
+            df_stats = df_plot.max().to_frame()
 
         #Set upper and lower bounds
         if np.min(df_stats) > 0:
@@ -505,17 +504,32 @@ def plot_single_var(df_all, period_choice, var_list, scenario_list,
             y_upper = np.max(df_stats)*1.05
         else:
             y_upper = 0
+        # full list of color options
+        ls_colors = ['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"]
+
+        # the colors we need, one for each scenario
+        if len(scenario_list) >= len(ls_colors):
+            # in case we have more scenarios than colors
+            ls_colors_to_use = ls_colors
+        else:
+            ls_colors_to_use = ls_colors[:(len(scenario_list) % len(ls_colors))]
+
+        # pull out how many times we will need to duplicate this list
+        i_full_list, i_remainder_list = divmod(df_stats.shape[0], len(ls_colors_to_use))
+        ls_colors_to_use = ls_colors_to_use * i_full_list + ls_colors_to_use[:i_remainder_list]
+        df_stats['Color'] = ls_colors_to_use
 
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
             return pn.Column(
-                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(title='',
+                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(title='', color='Color',
                                                                                                       ylabel=units_choice, ylim=(y_lower, y_upper),
                                                                                                       grid=True, min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(
-                pn.pane.HoloViews(df_stats.hvplot.bar(title='', ylabel=units_choice, ylim=(y_lower, y_upper),
+                pn.pane.HoloViews(df_stats.hvplot.bar(title='', color='Color',
+                                                      ylabel=units_choice, ylim=(y_lower, y_upper),
                                                       grid=True, min_height=600), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, max_height=500))
 
@@ -527,11 +541,11 @@ def plot_single_var(df_all, period_choice, var_list, scenario_list,
 
         # calculate chosen stat
         if stat_choice == 'Average':
-            df_stats = df_plot.mean()
+            df_stats = df_plot.mean().to_frame()
         elif stat_choice == 'Minimum':
-            df_stats = df_plot.min()
+            df_stats = df_plot.min().to_frame()
         else:
-            df_stats = df_plot.max()
+            df_stats = df_plot.max().to_frame()
 
         # Set upper and lower bounds
         if np.min(df_stats) > 0:
@@ -543,11 +557,26 @@ def plot_single_var(df_all, period_choice, var_list, scenario_list,
         else:
             y_upper = 0
 
+        # full list of color options
+        ls_colors = ['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"]
+
+        # the colors we need, one for each scenario
+        if len(scenario_list) >= len(ls_colors):
+            # in case we have more scenarios than colors
+            ls_colors_to_use = ls_colors
+        else:
+            ls_colors_to_use = ls_colors[:(len(scenario_list) % len(ls_colors))]
+
+        # pull out how many times we will need to duplicate this list
+        i_full_list, i_remainder_list = divmod(df_stats.shape[0], len(ls_colors_to_use))
+        ls_colors_to_use = ls_colors_to_use * i_full_list + ls_colors_to_use[:i_remainder_list]
+        df_stats['Color'] = ls_colors_to_use
+
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
             return pn.Column(
                 pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
-                                                                                                      title='', grid=True,
+                                                                                                      title='',  color='Color', grid=True,
                                                                                                       ylabel=units_choice,
                                                                                                       ylim=(y_lower, y_upper),
                                        min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
@@ -556,7 +585,7 @@ def plot_single_var(df_all, period_choice, var_list, scenario_list,
         else:
             return pn.Column(
                 pn.pane.HoloViews(df_stats.hvplot.bar(
-                                                      title='', grid=True,
+                                                      title='',  color='Color', grid=True,
                                                       ylabel=units_choice,
                                                       ylim=(y_lower, y_upper),
                                                       min_height=600), sizing_mode='stretch_width', linked_axes=False),

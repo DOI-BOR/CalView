@@ -14,13 +14,18 @@ from cs3_plotlib import plot_values, plot_time_group, plot_time_exceedance, plot
 import panel as pn
 import os
 from os import path
-import warnings
+import holoviews as hv
+
 #TODO
 #Put in code to pickle visualized scenario, make sure it includes user run names
 
 # NOTE: need to use name/main for Pool to work outside of script
-warnings.filterwarnings('ignore')
 pn.extension(sizing_mode='stretch_width')
+
+# change default colors to first go through Reclamation colors and then original default colors
+hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
+#hv.opts.defaults(hv.opts.Bars(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
+
 
 #Visualizer formatting code
 
@@ -263,21 +268,21 @@ def update_run_names(event):
 
         # to hold the ones entered in the optional field
         c_new_fields = {}
+        if field_column[1].value != '':
+            for line in field_column[1].value.split('\n'):
+                line = line.strip()
+                new_field = line.split(maxsplit=1)
+                if len(new_field) != 2:
+                    field = new_field[0]
+                    field = field.strip(' ').upper()
+                    c_new_fields[field] = field
+                else:
+                    field, description = new_field
 
-        for line in field_column[1].value.split('\n'):
-            line = line.strip()
-            new_field = line.split(maxsplit=1)
-            if len(new_field) != 2:
-                field = new_field[0]
-                field = field.strip(' ').upper()
-                c_new_fields[field] = field
-            else:
-                field, description = new_field
-
-                field = field.strip(' ').upper()
-                description = description.strip('\n')
-                description = description + ' (' + field + ')'
-                c_new_fields[field] = description
+                    field = field.strip(' ').upper()
+                    description = description.strip('\n')
+                    description = description + ' (' + field + ')'
+                    c_new_fields[field] = description
 
         c_field_list = c_tr_fields | c_new_fields
 
