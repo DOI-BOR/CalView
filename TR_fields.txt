@@ -78,3 +78,4 @@ short_swp_tot_s	SWP SOD Delivery Shortage
 short_swp_tot_n	SWP NOD Delivery Shortage
 wyt_sac_	Sac Index Water Year Type
 wyt_sjr_	SJR Index Water Year Type
+wyt_trin_	Trinity Index Water Year Type

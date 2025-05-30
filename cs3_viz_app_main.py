@@ -10,7 +10,7 @@
 
 # Import data handling functions from our local module
 from csdss_readlib_fullfile import file_reader, pickler, load_pickles, get_trend_fields
-from cs3_plotlib import plot_values, plot_time_group, plot_time_exceedance, plot_single_var, run_operation
+from cs3_plotlib import plot_values, plot_time_group, plot_time_exceedance, plot_bars, run_operation
 import panel as pn
 import os
 from os import path
@@ -22,10 +22,9 @@ import holoviews as hv
 # NOTE: need to use name/main for Pool to work outside of script
 pn.extension(sizing_mode='stretch_width')
 
-# change default colors to first go through Reclamation colors and then original default colors
+# change default colors to first go through Reclamation colors and then original default colors for line plots
 hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
-#hv.opts.defaults(hv.opts.Bars(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
-
+hv.opts.defaults(hv.opts.Scatter(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 
 #Visualizer formatting code
 
@@ -348,16 +347,58 @@ def create_plot_title(s_title, s_comparison, s_period, s_stat=''):
     c_period_code_to_name = {"DY": "January-December", "WY": "October-September", "CY": "March-February",
                              1: "January", 2: "February", 3: "March", 4: "April",
                              5: "May", 6: "June", 7: "July", 8: "August",
-                             9: "September", 10: "October", 11: "November", 12: "December"}
+                             9: "September", 10: "October", 11: "November", 12: "December",
+                             'WYT': 'Water Year Type'}
     if s_stat:
         s_final_title = "# " + s_stat + ' Value ' + s_title
     else:
         s_final_title = "# " + s_title
     if s_comparison:
         s_final_title += " (Difference from " + s_comparison + ")"
-    if s_period:
-        s_final_title += " (" + c_period_code_to_name[s_period] + ")"
+    try:
+        if s_period:
+            s_final_title += " (" + c_period_code_to_name[s_period] + ")"
+    except:
+        # TODO: make this the description, not the name
+        s_final_title += " (" + s_period + ")"
     return pn.pane.Markdown(s_final_title)
+
+def hide_show_wyt(event):
+    global header
+
+    # make sure that the header has been populated
+    if len(header) > 2:
+        # check if a WYT is selected
+        if (len(str(event.new)) >= 3) and (event.new[:3] == 'WYT'):
+            # turn on the visibility
+            header[2][1].visible = True
+
+        else:
+            # turn it off
+            header[2][1].visible = False
+    return
+
+
+def update_wyt_names(target, event):
+    if event.new != event.old:
+        if len(str(event.new)) >=3 and event.new[:3] == 'WYT':
+            c_wyt_names = {
+                'WYT_SAC_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
+                'WYT_SJR_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
+                'WYT_TRIN_': {'Extremely Wet': 1, 'Wet': 2, 'Normal': 3, 'Dry': 4, 'Critically Dry': 5}
+            }
+            try:
+                target.options = c_wyt_names[event.new]
+            except:
+                target.options = c_wyt_names['WYT_SAC_']
+    return
+
+
+def wyt_period_toggle(target, event):
+    # disable months if the button is toggled
+    target.disabled = event.new
+
+
 def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, df_diffs):
     global single_var_plots
     global grouped_plots
@@ -369,7 +410,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
 
     # Select which alts to examine
     scen_selector = pn.widgets.MultiChoice(
-        name='Scenario selector',
+        name='Scenario Selector',
         options=scenario_names,
         value=scenario_names,
         width=400
@@ -386,27 +427,62 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     )
 
     period_selector = pn.widgets.Select(
-        name='Period selector',
-        options={"January-December": "DY", "October-September": "WY", "March-February": "CY",
-                 "January": 1, "February": 2, "March": 3, "April": 4,
+        name='Period Selector',
+        groups={'Year': {"January-December": "DY", "October-September": "WY", "March-February": "CY"},
+                'Month': {"January": 1, "February": 2, "March": 3, "April": 4,
                  "May": 5, "June": 6, "July": 7, "August": 8,
                  "September": 9, "October": 10, "November": 11, "December": 12},
-        width=200
+                'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if wyt[-1] == '_'}
+                },
+        width=300
     )
+
+    wyt_selector = pn.widgets.CheckButtonGroup(
+        name='Water Year Type',
+        options={'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
+        button_type='primary',
+        button_style='outline'
+    )
+
+    wyt_period_selector = pn.widgets.CheckButtonGroup(
+        name='WYT Period Selector',
+        options={"January": 1, "February": 2, "March": 3, "April": 4,
+                   "May": 5, "June": 6, "July": 7, "August": 8,
+                   "September": 9, "October": 10, "November": 11, "December": 12
+                   },
+        button_type='primary',
+        button_style='outline'
+    )
+    wyt_period_selector_year = pn.widgets.Toggle(
+        name='Water Year Total',
+        button_type='primary',
+        button_style='outline')
+
+
+    # to update the visibility when period is changed
+    wyt_watcher = period_selector.param.watch(hide_show_wyt, 'value')
+
+    # to update the names when the period is changed
+    wyt_names_linked = period_selector.link(wyt_selector, callbacks={'value': update_wyt_names})
+
+    wyt_period_linked = wyt_period_selector_year.link(wyt_period_selector, callbacks={'value': wyt_period_toggle})
+
+    period_selector.param.trigger('value')
+
 
     # for the field names we need a diction of {description: field}
     c_description_to_field = {description: field for field, description in c_field_list.items()}
 
-    # Select the variables
+    # Select the variables (no water year types)
     var_selector = pn.widgets.MultiChoice(
-        name='Variable selector',
-        options=c_description_to_field,
+        name='Variable Selector',
+        options={description: field for description, field in c_description_to_field.items() if field[-1] != '_'},
         value=[list(c_description_to_field.values())[0]],
         width=400
     )
 
     stat_sel = pn.widgets.Select(
-        name='Statistic selector',
+        name='Statistic Selector',
         options=['Average', 'Minimum', 'Maximum'],
         width=400
     )
@@ -453,7 +529,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units_all=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
     bound_plot_grouped_diff = pn.bind(
@@ -465,7 +544,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units_all=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
     bound_plot_exceedance = pn.bind(
@@ -477,7 +559,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units_all=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
     bound_plot_diffs_exceedance = pn.bind(
@@ -489,11 +574,14 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units_all=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
     bound_single_var_plot = pn.bind(
-        plot_single_var,
+        plot_bars,
         df_all=df_all_data,
         period_choice=period_selector,
         var_list=var_selector,
@@ -502,11 +590,14 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         stat_choice=stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
     bound_single_var_diff_plot = pn.bind(
-        plot_single_var,
+        plot_bars,
         df_all=df_diffs,
         period_choice=period_selector,
         var_list=var_selector,
@@ -515,7 +606,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         stat_choice=stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
-        c_field_list=c_field_list
+        c_field_list=c_field_list,
+        ls_wyt_selected=wyt_selector,
+        b_wyt_period_year=wyt_period_selector_year,
+        li_wyt_period_months=wyt_period_selector
     )
 
 
@@ -560,7 +654,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     #Add selectors to header row in template and refresh objects
     header.append(scen_selector)
     header.append(var_selector)
-    header.append(period_selector)
+    header.append(pn.Column(period_selector, pn.Column(wyt_selector, pn.Row(wyt_period_selector_year, wyt_period_selector), visible=False), max_width=300))
     header.append(unit_selector)
     header.param.trigger("objects")
 
