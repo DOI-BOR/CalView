@@ -340,27 +340,28 @@ def update_run_names(event):
     for _ in range(len(file_picker_display)):
         file_picker_display.pop(0)
 
-def create_plot_title(s_title, s_comparison, s_period, s_stat=''):
+def create_plot_title(s_title, s_comparison='', s_period='', s_stat=''):
     """
     To create the titles for the plots that change when values are updated
     """
     c_period_code_to_name = {"DY": "January-December", "WY": "October-September", "CY": "March-February",
                              1: "January", 2: "February", 3: "March", 4: "April",
                              5: "May", 6: "June", 7: "July", 8: "August",
-                             9: "September", 10: "October", 11: "November", 12: "December",
-                             'WYT': 'Water Year Type'}
+                             9: "September", 10: "October", 11: "November", 12: "December"
+                             }
+    s_final_title = "# "
     if s_stat:
-        s_final_title = "# " + s_stat + ' Value ' + s_title
+         s_final_title += s_stat + ' Value ' + s_title
     else:
-        s_final_title = "# " + s_title
+        s_final_title += s_title
     if s_comparison:
         s_final_title += " (Difference from " + s_comparison + ")"
-    try:
-        if s_period:
+    if s_period:
+        if s_period in c_period_code_to_name.keys():
             s_final_title += " (" + c_period_code_to_name[s_period] + ")"
-    except:
-        # TODO: make this the description, not the name
-        s_final_title += " (" + s_period + ")"
+        # this is when we are grouping by wyt
+        else:
+            s_final_title += " (Water Year Type)"
     return pn.pane.Markdown(s_final_title)
 
 def hide_show_wyt(event):
@@ -432,7 +433,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
                 'Month': {"January": 1, "February": 2, "March": 3, "April": 4,
                  "May": 5, "June": 6, "July": 7, "August": 8,
                  "September": 9, "October": 10, "November": 11, "December": 12},
-                'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if wyt[-1] == '_'}
+                'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if len(wyt) >=3 and wyt[:3] == 'WYT'}
                 },
         width=300
     )
@@ -447,7 +448,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     wyt_period_selector = pn.widgets.CheckButtonGroup(
         name='WYT Period Selector',
         options={"January": 1, "February": 2, "March": 3, "April": 4,
-                   "May": 5, "June": 6, "July": 7, "August": 8,
+                    "May": 5, "June": 6, "July": 7, "August": 8,
                    "September": 9, "October": 10, "November": 11, "December": 12
                    },
         button_type='primary',
@@ -458,7 +459,6 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         button_type='primary',
         button_style='outline')
 
-
     # to update the visibility when period is changed
     wyt_watcher = period_selector.param.watch(hide_show_wyt, 'value')
 
@@ -468,7 +468,6 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     wyt_period_linked = wyt_period_selector_year.link(wyt_period_selector, callbacks={'value': wyt_period_toggle})
 
     period_selector.param.trigger('value')
-
 
     # for the field names we need a diction of {description: field}
     c_description_to_field = {description: field for field, description in c_field_list.items()}

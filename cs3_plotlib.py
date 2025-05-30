@@ -295,10 +295,24 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
             # get rid of other columns we dont need
             df_plot = df_grouped[keeplist]
+        s_title = "## " + s_wyt_col + " "
 
+        c_wyt_names = {
+            'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+        }
+        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        if b_wyt_period_year:
+            s_title += "## Water Year Total"
+        else:
+            li_wyt_period_months.sort()
+            ls_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            s_title += "## " + ', '.join([ls_months[i-1] for i in li_wyt_period_months])
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot.scatter(
+
+            return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
@@ -306,7 +320,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 xlabel=period_choice,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
-            return pn.Column(pn.pane.HoloViews(df_plot.hvplot.scatter(
+            return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
@@ -582,9 +596,24 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                     l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
                     df_exceed[var] = l_sorted
 
+        s_title = "## " + s_wyt_col + " "
+
+        c_wyt_names = {
+            'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+        }
+        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        if b_wyt_period_year:
+            s_title += "## Water Year Total"
+        else:
+            li_wyt_period_months.sort()
+            ls_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            s_title += "## " + ', '.join([ls_months[i-1] for i in li_wyt_period_months])
+
         # add horizontal line if we are doing the differences plot
         if s_comparison not in scenario_list:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
+            return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=unit_choice,
@@ -595,7 +624,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
+            return pn.Column(s_title, pn.pane.HoloViews(df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=unit_choice,
@@ -742,7 +771,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     df_wide.reset_index(inplace=True, drop=True)
 
     keeplist = []
-
+    s_title = ''
 
     # if grouping by wyt we need to include that variable
     if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
@@ -845,6 +874,22 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
         else:
             df_stats = df_plot[keeplist[len(scenario_list):]].max().to_frame()
 
+        s_title = "## " + s_wyt_col + " "
+
+        c_wyt_names = {
+            'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+        }
+
+        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        if b_wyt_period_year:
+            s_title += "## Water Year Total"
+        else:
+            ls_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            li_wyt_period_months.sort()
+            s_title += "## " + ', '.join([ls_months[i - 1] for i in li_wyt_period_months])
+
     # Month chosen
     else:
         df_wide = df_wide[df_wide.Month == period_choice]
@@ -887,7 +932,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
     # add horizontal line if we are doing the differences plot
     if s_comparison not in scenario_list:
-        return pn.Column(
+        return pn.Column(s_title,
             pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
                                                                                                   title='',  color='Color', grid=True,
                                                                                                   ylabel=units_choice,
@@ -896,7 +941,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             pn.pane.DataFrame(df_plot, max_height=500))
 
     else:
-        return pn.Column(
+        return pn.Column(s_title,
             pn.pane.HoloViews(df_stats.hvplot.bar(
                                                   title='',  color='Color', grid=True,
                                                   ylabel=units_choice,
