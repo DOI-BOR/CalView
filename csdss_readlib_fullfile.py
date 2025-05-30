@@ -145,8 +145,10 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
         # make sure it is uppercase
         b_part_upper = b_part.upper()
         try:
-            c_part = dfPaths[dfPaths['B'] == b_part_upper]['C'].iloc[0]
-            target_pathName = f'/CALSIM/{b_part_upper}/{c_part}//1MON/L2020A/'
+            c_part = dfPaths[dfPaths['B'] == b_part]['C'].iloc[0]
+            a_part = dfPaths[dfPaths['B'] == b_part]['A'].iloc[0]
+            f_part = dfPaths[dfPaths['B'] == b_part]['F'].iloc[0]
+            target_pathName = f'/{a_part}/{b_part_upper}/{c_part}//1MON/{f_part}/'
             target_path_list.append(target_pathName)
         except:
             c_target_ts_list_final.pop(b_part)
