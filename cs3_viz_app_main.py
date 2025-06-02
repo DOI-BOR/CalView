@@ -24,6 +24,7 @@ pn.extension(sizing_mode='stretch_width')
 
 # change default colors to first go through Reclamation colors and then original default colors for line plots
 hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
+hv.opts.defaults(hv.opts.Bars(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 hv.opts.defaults(hv.opts.Scatter(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 
 #Visualizer formatting code
@@ -654,7 +655,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
@@ -670,7 +671,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )

@@ -787,7 +787,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
 def plot_bars(df_all, period_choice, var_list, scenario_list,
               unit_choice, stat_choice, c_default_units, s_comparison, c_field_list,
-              ls_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+              li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
 
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
@@ -844,7 +844,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
         # sort for the years we want
         # see if any years are selected
-        if not ls_wyt_selected:
+        if not li_wyt_selected:
             return pn.pane.Markdown("## No data to display")
 
         # we do have some selected
@@ -855,7 +855,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
         df_septembers = df_all_plot[df_all_plot['Month'] == 9]
 
         # pull the years and scenarios that match the selected wyts
-        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(ls_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
+        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(li_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
         # dictionary to hold {(scenario, WY): WYT}
         c_wy_to_wyt = {}
         for index, row in df_wy_to_use.iterrows():
@@ -876,7 +876,6 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     df_wide.reset_index(inplace=True, drop=True)
 
     keeplist = []
-    s_title = ''
 
     # if grouping by wyt we need to include that variable
     if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
@@ -885,7 +884,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             df_temp.reset_index(inplace=True, drop=True)
             col_names = [f'{scenario}: {s_wyt_col}']
             df_temp.columns = col_names
-            df_wide[col_names] = df_temp[col_names]  # WHAT THE HECK
+            df_wide[col_names] = df_temp[col_names]
             for name in col_names:
                 keeplist.append(name)
     for var in var_list:
@@ -971,13 +970,37 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
             # get rid of other columns we dont need
             df_plot = df_grouped[keeplist]
-            # calculate chosen stat
-        if stat_choice == 'Average':
-            df_stats = df_plot[keeplist[len(scenario_list):]].mean().to_frame()
-        elif stat_choice == 'Minimum':
-            df_stats = df_plot[keeplist[len(scenario_list):]].min().to_frame()
-        else:
-            df_stats = df_plot[keeplist[len(scenario_list):]].max().to_frame()
+            # if stat_choice == 'Average':
+            #     df_stats = df_plot[keeplist[len(scenario_list):]].mean().to_frame()
+            # elif stat_choice == 'Minimum':
+            #     df_stats = df_plot[keeplist[len(scenario_list):]].min().to_frame()
+            # else:
+            #     df_stats = df_plot[keeplist[len(scenario_list):]].max().to_frame()
+
+        df_final = pd.DataFrame(index=pd.MultiIndex.from_product([li_wyt_selected, scenario_list], names=[s_wyt_col, 'Scenario']))
+        for i_wyt in li_wyt_selected:
+            for s_scen in scenario_list:
+                s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
+                df_temp = df_wide[df_wide[s_scen_wyt_col] == i_wyt]
+                col_names = [f'{s_scen}: {var_list[0]}']
+                if stat_choice == 'Average':
+                    df_temp = df_temp[col_names].mean()
+                elif stat_choice == 'Minimum':
+                    df_temp = df_temp[col_names].min()
+                else:
+                    df_temp = df_temp[col_names].max()
+                df_final.loc[(i_wyt, s_scen), var_list] = df_temp.values
+        for s_scen in scenario_list:
+            s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
+            df_temp = df_wide[df_wide[s_scen_wyt_col].isin(li_wyt_selected)]
+            col_names = [f'{s_scen}: {var_list[0]}']
+            if stat_choice == 'Average':
+                df_temp = df_temp[col_names].mean()
+            elif stat_choice == 'Minimum':
+                df_temp = df_temp[col_names].min()
+            else:
+                df_temp = df_temp[col_names].max()
+            df_final.loc[(6, s_scen), var_list[0]] = df_temp.values
 
         s_title = "## " + s_wyt_col + " "
 
@@ -986,8 +1009,12 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
         }
+        s_all_sel_wyt = 'All WYTs' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        for wyt in list(c_wyt_names.keys()):
+            c_wyt_names[wyt][6] = s_all_sel_wyt
+        df_final.rename(index=c_wyt_names[period_choice], inplace=True)
 
-        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        s_title += 'All Water Year Types\n' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected]) + ' Years \n'
         if b_wyt_period_year:
             s_title += "## Water Year Total"
         else:
@@ -995,6 +1022,23 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             li_wyt_period_months.sort()
             s_title += "## " + ', '.join([ls_months[i - 1] for i in li_wyt_period_months])
 
+        if b_diffs_flag:
+            return pn.Column(s_title,
+                             pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_final.hvplot.bar(
+                                 title='', grid=True,
+                                 ylabel=var_list[0] + ' (' + unit_choice + ')',
+                                 rot=90,
+                                 min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
+                             pn.pane.DataFrame(df_plot, max_height=500))
+
+        else:
+            return pn.Column(s_title,
+                             pn.pane.HoloViews(df_final.hvplot.bar(
+                                 title='', grid=True,
+                                 ylabel=var_list[0] + ' (' + unit_choice + ')',
+                                 rot=90,
+                                 min_height=600), sizing_mode='stretch_width', linked_axes=False),
+                             pn.pane.DataFrame(df_plot, max_height=500))
     # Month chosen
     elif isinstance(period_choice, int):
         df_wide = df_wide[df_wide.Month == period_choice]
@@ -1062,7 +1106,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
     # add horizontal line if we are doing the differences plot
     if b_diffs_flag:
-        return pn.Column(s_title,
+        return pn.Column(
             pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
                                                                                                   title='',  color='Color', grid=True,
                                                                                                   ylabel=unit_choice,
@@ -1071,7 +1115,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             pn.pane.DataFrame(df_plot, max_height=500))
 
     else:
-        return pn.Column(s_title,
+        return pn.Column(
             pn.pane.HoloViews(df_stats.hvplot.bar(
                                                   title='',  color='Color', grid=True,
                                                   ylabel=unit_choice,
