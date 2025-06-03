@@ -10,7 +10,7 @@
 
 # Import data handling functions from our local module
 from csdss_readlib_fullfile import file_reader, pickler, load_pickles, get_trend_fields
-from cs3_plotlib import plot_values, plot_time_group, plot_time_exceedance, plot_bars, run_operation
+from cs3_plotlib import plot_values, plot_time_group, plot_time_exceedance, plot_bars, monthly_pattern
 import panel as pn
 import os
 from os import path
@@ -21,9 +21,11 @@ import holoviews as hv
 
 # NOTE: need to use name/main for Pool to work outside of script
 pn.extension(sizing_mode='stretch_width')
+pn.extension(notifications=True)
 
 # change default colors to first go through Reclamation colors and then original default colors for line plots
 hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
+hv.opts.defaults(hv.opts.Bars(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 hv.opts.defaults(hv.opts.Scatter(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 
 #Visualizer formatting code
@@ -63,6 +65,7 @@ single_var_plots = pn.Column()
 timeseries_plots = pn.Row()
 grouped_plots = pn.Row()
 exceedance_plots = pn.Row()
+monthly_plots = pn.Column()
 def update_dss_file_widget(event):
     global file_picker_column  # Access the global variable
     if event.name == "value":
@@ -133,7 +136,7 @@ def add_run_names_widget(event):
                 # Enter a run name for each file (e.g. Baseline, Alt1, etc.). 
                 
                 ## <span style="color:red">One run must be marked for comparison.</span>
-                """)
+                """, renderer='markdown')
             run_name_column.append(run_name_instructions)
             run_name_col_tracker.append("run_name_instructions")
 
@@ -175,23 +178,48 @@ def add_run_names_widget(event):
             # no need for fields section, just start pulling the files
             update_run_names(event)
 
+        # add option to override TR_fields.txt
+        override_TR_fields_instructions = pn.pane.Markdown("""
+        # OPTIONAL override default fields:
+        
+        ## If you would like to override the built in default fields, select a text file with your preferred fields.
+        
+        ### Each line must be a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
+        
+        ### Example:
+        
+        > S_FOLSM Folsom Storage
+        >
+        > S_SHSTA Shasta Storage
+        
+        ...
+        """, renderer='markdown')
+
+        field_column.append(override_TR_fields_instructions)
+        field_col_tracker.append("override_instructions")
+
+        override_file = pn.widgets.FileInput(accept='.txt', multiple=False, max_width=500)
+
+        field_column.append(override_file)
+        field_col_tracker.append("override_file")
+
         #Also add optional field add text box
         add_field_instructions = pn.pane.Markdown("""
         # OPTIONAL additional fields: 
         
-        ## Add additional fields to visualize that are not present in the default list. 
+        ## Add additional fields to visualize that are not present in the default list (or your chosen list). 
         
         ### Each line is a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
         
         ### Example:
         
-        S_FOLSM Folsom Storage
-        
-        S_SHSTA Shasta Storage
+        > S_FOLSM Folsom Storage
+        >
+        > S_SHSTA Shasta Storage
         
         ...
         
-        """)
+        """, renderer='markdown')
         field_column.append(add_field_instructions)
         field_col_tracker.append("add_field_instructions")
 
@@ -265,13 +293,41 @@ def update_run_names(event):
         # pulling from TR_fields.txt
         c_tr_fields = get_trend_fields()
 
-        # to hold the ones entered in the optional field
-        c_new_fields = {}
-        if field_column[1].value != '':
-            for line in field_column[1].value.split('\n'):
+        # get the overridden fields
+        override_TR_fields = field_column[field_col_tracker.index("override_file")].value
+        c_override_fields = {}
+        if override_TR_fields:
+            override_TR_fields_text = override_TR_fields.decode()
+            for line in override_TR_fields_text.split('\n'):
                 line = line.strip()
                 new_field = line.split(maxsplit=1)
-                if len(new_field) != 2:
+                print(new_field)
+                if len(new_field) == 0:
+                    continue
+                elif len(new_field) == 1:
+                    field = new_field[0]
+                    field = field.strip(' ').upper()
+                    if field in c_tr_fields.keys():
+                        c_override_fields[field] = c_tr_fields[field]
+                    else:
+                        c_override_fields[field] = field
+                else:
+                    field, description = new_field
+
+                    field = field.strip(' ').upper()
+                    description = description.strip('\n')
+                    description = description + ' (' + field + ')'
+                    c_override_fields[field] = description
+        print(c_override_fields)
+        # to hold the ones entered in the optional field
+        c_new_fields = {}
+        if field_column[field_col_tracker.index("add_field_text")].value != '':
+            for line in field_column[field_col_tracker.index("add_field_text")].value.split('\n'):
+                line = line.strip()
+                new_field = line.split(maxsplit=1)
+                if len(new_field) == 0:
+                    continue
+                elif len(new_field) == 1:
                     field = new_field[0]
                     field = field.strip(' ').upper()
                     c_new_fields[field] = field
@@ -282,9 +338,11 @@ def update_run_names(event):
                     description = description.strip('\n')
                     description = description + ' (' + field + ')'
                     c_new_fields[field] = description
-
-        c_field_list = c_tr_fields | c_new_fields
-
+        if override_TR_fields:
+            c_field_list = c_override_fields | c_new_fields
+        else:
+            c_field_list = c_tr_fields | c_new_fields
+        print(c_field_list)
         runs = []
 
         #Pair file names with user entered run names
@@ -347,7 +405,10 @@ def create_plot_title(s_title, s_comparison='', s_period='', s_stat=''):
     c_period_code_to_name = {"DY": "January-December", "WY": "October-September", "CY": "March-February",
                              1: "January", 2: "February", 3: "March", 4: "April",
                              5: "May", 6: "June", 7: "July", 8: "August",
-                             9: "September", 10: "October", 11: "November", 12: "December"
+                             9: "September", 10: "October", 11: "November", 12: "December",
+                             '11-3': 'November-March', '8-10': 'August-October', '10-1': 'October-January',
+                             '12-2': 'December-February', '3-5': 'March-May', '3-6': 'March-June',
+                             '6-9': 'June-September', '9-11': 'September-November'
                              }
     s_final_title = "# "
     if s_stat:
@@ -405,6 +466,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     global grouped_plots
     global exceedance_plots
     global timeseries_plots
+    global monthly_plots
     global header
     global tabs_row
     global s_comparison
@@ -431,8 +493,11 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         name='Period Selector',
         groups={'Year': {"January-December": "DY", "October-September": "WY", "March-February": "CY"},
                 'Month': {"January": 1, "February": 2, "March": 3, "April": 4,
-                 "May": 5, "June": 6, "July": 7, "August": 8,
-                 "September": 9, "October": 10, "November": 11, "December": 12},
+                          "May": 5, "June": 6, "July": 7, "August": 8,
+                          "September": 9, "October": 10, "November": 11, "December": 12},
+                "Partial Year": {'November-March': '11-3', 'August-October': '8-10', 'October-January': '10-1',
+                                 'December-February': '12-2', 'March-May': '3-5', 'March-June': '3-6',
+                                 'June-September': '6-9', 'September-November': '9-11'},
                 'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if len(wyt) >=3 and wyt[:3] == 'WYT'}
                 },
         width=300
@@ -486,10 +551,11 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         width=400
     )
 
-    # 20241223: Create different dataframes for each function call
-    # Trying to fix non-independent plots issue
-    # df_all_data_ts = df_all_data.copy(deep=True)
-    # df_all_data_ts_diffs = df_diffs.copy(deep=True)
+    monthly_stat_sel = pn.widgets.Select(
+        name='Statistic Selector',
+        options=['Average', 'Minimum', 'Maximum'],
+        width=400
+    )
 
     # remove comparison scen from the differences dataframe as all values are zero
     df_diffs = df_diffs[df_diffs.Scenario != s_comparison]
@@ -503,7 +569,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_all_data,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list
     )
@@ -514,7 +580,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_diffs,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list
     )
@@ -525,7 +591,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_all_data,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
@@ -540,7 +606,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_diffs,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
@@ -555,7 +621,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_all_data,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
@@ -570,7 +636,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         var_list=var_selector,
         unit_choice=unit_selector,
         df_all=df_diffs,
-        c_default_units_all=c_default_units,
+        c_default_units=c_default_units,
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
@@ -585,12 +651,12 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         var_list=var_selector,
         scenario_list=scen_selector,
-        units_choice=unit_selector,
+        unit_choice=unit_selector,
         stat_choice=stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
@@ -601,16 +667,37 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         var_list=var_selector,
         scenario_list=scen_selector,
-        units_choice=unit_selector,
+        unit_choice=unit_selector,
         stat_choice=stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
 
+    bound_monthly_plot = pn.bind(
+        monthly_pattern,
+        df_all=df_all_data,
+        var_list=var_selector,
+        scenario_list=scen_selector,
+        unit_choice=unit_selector,
+        stat_choice=monthly_stat_sel,
+        c_default_units=c_default_units,
+        s_comparison=s_comparison,
+        c_field_list=c_field_list)
+
+    bound_monthly_diffs_plot = pn.bind(
+        monthly_pattern,
+        df_all=df_diffs,
+        var_list=var_selector,
+        scenario_list=scen_selector,
+        unit_choice=unit_selector,
+        stat_choice=monthly_stat_sel,
+        c_default_units=c_default_units,
+        s_comparison=s_comparison,
+        c_field_list=c_field_list)
 
     ts_title = pn.pane.Markdown("# Timeseries Plot"
                                 )
@@ -650,6 +737,15 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
                                     s_period=period_selector,
                                     s_stat=stat_sel)
 
+    monthly_title = pn.bind(create_plot_title,
+                            s_title="Monthly Pattern",
+                            s_stat=monthly_stat_sel)
+
+    monthly_diffs_title = pn.bind(create_plot_title,
+                            s_title="Monthly Pattern",
+                            s_comparison=s_comparison,
+                            s_stat=monthly_stat_sel)
+
     #Add selectors to header row in template and refresh objects
     header.append(scen_selector)
     header.append(var_selector)
@@ -671,11 +767,15 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     exceedance_plots.append(pn.Column(exceedance_title, bound_plot_exceedance))
     exceedance_plots.append(pn.Column(exceedance_diff_title, bound_plot_diffs_exceedance))
 
+    monthly_plots.append(pn.Row(monthly_stat_sel))
+    monthly_plots.append(pn.Row(pn.Column(monthly_title, bound_monthly_plot), pn.Column(monthly_diffs_title, bound_monthly_diffs_plot)))
+
     tabs = pn.Tabs(
         ('Bar Plot', single_var_plots),
         ('Timeseries', timeseries_plots),
         ('Time-Aggregated', grouped_plots),
-        ('Exceedance', exceedance_plots))
+        ('Exceedance', exceedance_plots),
+        ('Monthly Pattern', monthly_plots))
 
     tabs_row.append(tabs)
     tabs_row.param.trigger("objects")
