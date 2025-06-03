@@ -21,6 +21,7 @@ import holoviews as hv
 
 # NOTE: need to use name/main for Pool to work outside of script
 pn.extension(sizing_mode='stretch_width')
+pn.extension(notifications=True)
 
 # change default colors to first go through Reclamation colors and then original default colors for line plots
 hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))

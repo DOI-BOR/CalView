@@ -241,15 +241,15 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 min_height=600,
                 grid=True,
-                ylabel=unit_choice,
-                xlabel=period_choice,
+                ylabel='Total ' + unit_choice,
+                xlabel='Year',
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
                 min_height=600,
                 grid=True,
-                ylabel=unit_choice,
-                xlabel=period_choice,
+                ylabel='Total ' + unit_choice,
+                xlabel='Year',
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if water year type is selected as period
@@ -326,16 +326,16 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
-                ylabel='Water Year',
-                xlabel=period_choice,
+                xlabel='Water Year',
+                ylabel='Total ' + unit_choice,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
-                ylabel=unit_choice,
                 xlabel='Water Year',
+                ylabel='Total ' + unit_choice,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # selected a month
@@ -346,13 +346,15 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         df_wide = df_wide.drop('Date', axis=1)
         df_grouped = df_wide.groupby(by=['DY']).sum()
         df_plot = df_grouped[keeplist]
-
+        c_num_to_month = {1: "January", 2: "February", 3: "March", 4: "April",
+                          5: "May", 6: "June", 7: "July", 8: "August",
+                          9: "September", 10: "October", 11: "November", 12: "December"}
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 y=keeplist[1:],
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
@@ -361,7 +363,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
                 y=keeplist[1:],
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
@@ -380,7 +382,12 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
         # Can't sum dates: drop
         df_wide = df_wide.drop('Date', axis=1)
-        df_grouped = df_wide.groupby(by=['WY']).sum()
+
+        # if we cross a cal year change, group by WY
+        if period_choice in ['11-3', '10-1', '12-2']:
+            df_grouped = df_wide.groupby(by=['WY']).sum()
+        else:
+            df_grouped = df_wide.groupby(by=['DY']).sum()
         df_plot = df_grouped[keeplist]
 
         # add horizontal line if we are doing the differences plot
@@ -388,7 +395,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 y=keeplist[1:],
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Year',
                 grid=True
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
@@ -397,7 +404,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
                 y=keeplist[1:],
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Year',
                 grid=True
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
@@ -556,7 +563,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -567,7 +574,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -665,7 +672,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -676,7 +683,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(s_title, pn.pane.HoloViews(df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -707,14 +714,16 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
                 df_exceed[var] = l_sorted
 
-
+        c_num_to_month = {1: "January", 2: "February", 3: "March", 4: "April",
+                          5: "May", 6: "June", 7: "July", 8: "August",
+                          9: "September", 10: "October", 11: "November", 12: "December"}
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -725,7 +734,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -747,7 +756,13 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         # Can't sum dates: drop
         df_wide = df_wide.drop('Date', axis=1)
-        df_grouped = df_wide.groupby(by=['WY']).sum()
+
+        # if we cross a cal year change, group by WY
+        if period_choice in ['11-3', '10-1', '12-2']:
+            df_grouped = df_wide.groupby(by=['WY']).sum()
+        else:
+            df_grouped = df_wide.groupby(by=['DY']).sum()
+
         df_grouped.reset_index(inplace=True)
         # plot_pos = df_grouped.index
         df_exceed = pd.DataFrame(index=df_grouped.index)
@@ -767,7 +782,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -778,7 +793,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
-                ylabel=unit_choice,
+                ylabel='Total ' + unit_choice,
                 xlabel='Probability of Exceedance',
                 flip_xaxis=True,
                 xformatter='%f%%',
@@ -989,7 +1004,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                     df_temp = df_temp[col_names].min()
                 else:
                     df_temp = df_temp[col_names].max()
-                df_final.loc[(i_wyt, s_scen), var_list] = df_temp.values
+                df_final.loc[(i_wyt, s_scen), var_list[0]] = df_temp.values
         for s_scen in scenario_list:
             s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
             df_temp = df_wide[df_wide[s_scen_wyt_col].isin(li_wyt_selected)]
@@ -1022,11 +1037,17 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             li_wyt_period_months.sort()
             s_title += "## " + ', '.join([ls_months[i - 1] for i in li_wyt_period_months])
 
+        # if they have more than one variable selected, display a warning that only the first will display
+        # b_diffs_flag is so that we only get one
+        if len(var_list) > 1 and b_diffs_flag:
+            pn.state.notifications.position = 'center-center'
+            pn.state.notifications.warning('If more than one variable is selected, bar chart will only display the first.', duration=4000)
         if b_diffs_flag:
             return pn.Column(s_title,
                              pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_final.hvplot.bar(
                                  title='', grid=True,
-                                 ylabel=var_list[0] + ' (' + unit_choice + ')',
+                                 xlabel=s_wyt_col + ', Scenario',
+                                 ylabel=stat_choice + ' Total ' + var_list[0] + ' (' + unit_choice + ')',
                                  rot=90,
                                  min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
                              pn.pane.DataFrame(df_plot, max_height=500))
@@ -1035,7 +1056,8 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             return pn.Column(s_title,
                              pn.pane.HoloViews(df_final.hvplot.bar(
                                  title='', grid=True,
-                                 ylabel=var_list[0] + ' (' + unit_choice + ')',
+                                 xlabel=s_wyt_col + ', Scenario',
+                                 ylabel=stat_choice + ' Total ' + var_list[0] + ' (' + unit_choice + ')',
                                  rot=90,
                                  min_height=600), sizing_mode='stretch_width', linked_axes=False),
                              pn.pane.DataFrame(df_plot, max_height=500))
@@ -1067,7 +1089,12 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
         # Can't sum dates: drop
         df_wide = df_wide.drop('Date', axis=1)
 
-        df_grouped = df_wide.groupby(by=['WY']).sum()
+        # if we cross a cal year change, group by WY
+        if period_choice in ['11-3', '10-1', '12-2']:
+            df_grouped = df_wide.groupby(by=['WY']).sum()
+        else:
+            df_grouped = df_wide.groupby(by=['DY']).sum()
+            
         df_plot = df_grouped[keeplist]
 
         # calculate chosen stat
@@ -1109,7 +1136,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
         return pn.Column(
             pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
                                                                                                   title='',  color='Color', grid=True,
-                                                                                                  ylabel=unit_choice,
+                                                                                                  ylabel=stat_choice + ' Total ' + unit_choice,
                                                                                                   ylim=(y_lower, y_upper),
                                    min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_plot, max_height=500))
@@ -1118,7 +1145,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
         return pn.Column(
             pn.pane.HoloViews(df_stats.hvplot.bar(
                                                   title='',  color='Color', grid=True,
-                                                  ylabel=unit_choice,
+                                                  ylabel=stat_choice + ' Total ' + unit_choice,
                                                   ylim=(y_lower, y_upper),
                                                   min_height=600), sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_plot, max_height=500))
@@ -1212,7 +1239,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
         return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
             x='Month',
             min_height=600,
-            ylabel=unit_choice,
+            ylabel=stat_choice + ' ' + unit_choice,
             grid=True
         ),
             sizing_mode='stretch_width', linked_axes=False),
@@ -1221,7 +1248,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
         return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
             x='Month',
             min_height=600,
-            ylabel=unit_choice,
+            ylabel=stat_choice + ' ' + unit_choice,
             grid=True
         ),
             sizing_mode='stretch_width', linked_axes=False),
