@@ -474,6 +474,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         name='Scenario Selector',
         options=scenario_names,
         value=scenario_names,
+        option_limit=len(scenario_names),
+        search_option_limit=len(scenario_names),
         width=400
     )
 
@@ -540,6 +542,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         name='Variable Selector',
         options={description: field for description, field in c_description_to_field.items() if field[-1] != '_'},
         value=[list(c_description_to_field.values())[0]],
+        option_limit=len(list(c_description_to_field.keys())),
+        search_option_limit=len(list(c_description_to_field.keys())),
         width=400
     )
 
