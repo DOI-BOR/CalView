@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='cs_visualizer',
+    name='CalView',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
