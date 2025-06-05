@@ -52,8 +52,8 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list):
 
     # Calc diffs for the alts vs baseline
     # columns that shouldn't be subtracted
-    li_wyt_cols = [index for index, colname in enumerate(df_all_data) if len(colname) >= 3 and colname[:3] == 'WYT']
-    li_fixed_cols_indices = li_wyt_cols + list(range(0, num_fixed))
+    li_wyt_cols = [index+num_fixed for index, colname in enumerate(df_all_data.iloc[:, num_fixed:]) if c_default_units[colname] not in ['CFS', 'TAF']]
+    li_fixed_cols_indices = list(range(0, num_fixed)) + li_wyt_cols
     df_fixed_cols = df_all_data.iloc[:, li_fixed_cols_indices]
 
     li_numeric_col_indices = [i for i in range(len(df_all_data.columns)) if i not in li_fixed_cols_indices]

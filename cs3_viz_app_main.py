@@ -432,7 +432,8 @@ def hide_show_wyt(event):
         if (len(str(event.new)) >= 3) and (event.new[:3] == 'WYT'):
             # turn on the visibility
             header[2][1].visible = True
-
+        elif event.new == 'SHASTABIN_':
+            header[2][1].visible = True
         else:
             # turn it off
             header[2][1].visible = False
@@ -441,16 +442,19 @@ def hide_show_wyt(event):
 
 def update_wyt_names(target, event):
     if event.new != event.old:
-        if len(str(event.new)) >=3 and event.new[:3] == 'WYT':
+        if (len(str(event.new)) >= 3 and event.new[:3] == 'WYT') or event.new == 'SHASTABIN_':
             c_wyt_names = {
                 'WYT_SAC_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
                 'WYT_SJR_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
-                'WYT_TRIN_': {'Extremely Wet': 1, 'Wet': 2, 'Normal': 3, 'Dry': 4, 'Critically Dry': 5}
+                'WYT_TRIN_': {'Extremely Wet': 1, 'Wet': 2, 'Normal': 3, 'Dry': 4, 'Critically Dry': 5},
+                'SHASTABIN_': {'1a': 1, '1b': 2, '2a': 3, '2b': 4, '3a': 5, '3b': 6}
             }
             try:
                 target.options = c_wyt_names[event.new]
+                target.value = []
             except:
                 target.options = c_wyt_names['WYT_SAC_']
+                target.value = []
     return
 
 
@@ -498,7 +502,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
                 "Partial Year": {'November-March': '11-3', 'August-October': '8-10', 'October-January': '10-1',
                                  'December-February': '12-2', 'March-May': '3-5', 'March-June': '3-6',
                                  'June-September': '6-9', 'September-November': '9-11'},
-                'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if len(wyt) >=3 and wyt[:3] == 'WYT'}
+                'Water Year Type': {description: wyt for wyt, description in c_field_list.items() if len(wyt) >=3 and wyt[:3] == 'WYT'},
+                '': {description: var for var, description in c_field_list.items() if var == 'SHASTABIN_'}
                 },
         width=300
     )
@@ -540,7 +545,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     # Select the variables (no water year types)
     var_selector = pn.widgets.MultiChoice(
         name='Variable Selector',
-        options={description: field for description, field in c_description_to_field.items() if field[-1] != '_'},
+        options=c_description_to_field,
         value=[list(c_description_to_field.values())[0]],
         option_limit=len(list(c_description_to_field.keys())),
         search_option_limit=len(list(c_description_to_field.keys())),
@@ -601,7 +606,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
@@ -616,7 +621,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
@@ -631,7 +636,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
@@ -646,7 +651,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         period_choice=period_selector,
         s_comparison=s_comparison,
         c_field_list=c_field_list,
-        ls_wyt_selected=wyt_selector,
+        li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
         li_wyt_period_months=wyt_period_selector
     )
