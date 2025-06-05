@@ -121,7 +121,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                         ylabel=c_field_list[s_no_unit_var],
                         xlabel='Date',
                         grid=True,
-                        min_height=500,
+                        min_height=600,
                         yformatter=CustomJSTickFormatter(code="""
                                                     var labels = %s;
                                                     return labels[tick] || tick;
@@ -136,7 +136,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                         ylabel=c_field_list[s_no_unit_var],
                         xlabel='Date',
                         grid=True,
-                        min_height=500,
+                        min_height=600,
                         yformatter=CustomJSTickFormatter(code="""
                                     var labels = %s;
                                     return labels[tick] || tick;
