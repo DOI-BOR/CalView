@@ -4,6 +4,7 @@ import numpy as np
 import panel as pn
 import holoviews as hv
 from panel.io import hold
+from bokeh.models import CustomJSTickFormatter
 from bokeh.models import WheelZoomTool
 from csdss_readlib_fullfile import file_reader, pickler, load_pickles, get_trend_fields
 
@@ -41,6 +42,12 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+
+    b_no_unit_flag = False
+    s_no_unit_var = ''
+
+    # create copy of var list since lists are mutable
+    var_list_final = var_list[:]
     # Unit conversion
     for var in var_list:
         try:
@@ -49,6 +56,15 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             original_unit = None
 
         if original_unit not in ['CFS', 'TAF']:
+            # if we have more than one variable with no units selected we are not going to use it
+            if b_no_unit_flag:
+                if b_diffs_flag:
+                    pn.state.notifications.position = 'center-center'
+                    pn.state.notifications.warning('If more than one variable without units is selected, only the first will be displayed.', duration=7000)
+                var_list_final.remove(var)
+                continue
+            b_no_unit_flag = True
+            s_no_unit_var = var
             pass
         elif original_unit == unit_choice:
             pass
@@ -59,10 +75,12 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
+    if len(var_list_final) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
 
     # switch from variable name to description
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
-    var_list = [c_field_list[var] for var in var_list]
+    var_list_final = [c_field_list[var] for var in var_list_final]
 
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
@@ -71,9 +89,9 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     keeplist = ['Date']
 
     for scenario in scenario_list:
-        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list]
+        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list_final]
         df_temp.reset_index(inplace=True, drop=True)
-        col_names = [f'{scenario}: {var}' for var in var_list]
+        col_names = [f'{scenario}: {var}' for var in var_list_final]
         df_temp.columns = col_names
         df_wide[col_names] = df_temp[col_names]
         for name in col_names:
@@ -82,7 +100,96 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     df_plot = df_wide.drop([var for var in df_wide if var not in keeplist])
 
     keeplist.remove('Date')
+    if b_no_unit_flag:
+        no_unit_keeplist = [var for var in keeplist if s_no_unit_var in var]
+        unit_keeplist = [var for var in keeplist if var not in no_unit_keeplist]
+        c_no_unit_names = {
+            'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
+        }
 
+        # if we only have the no unit variable selected
+        if len(var_list_final) == 1:
+            # add horizontal line if we are doing the differences plot
+            if b_diffs_flag:
+                return pn.Column(
+                    pn.pane.HoloViews(df_plot.hvplot.scatter(
+                        x='Date',
+                        y=no_unit_keeplist,
+                        ylabel=c_field_list[s_no_unit_var],
+                        xlabel='Date',
+                        grid=True,
+                        min_height=600,
+                        yformatter=CustomJSTickFormatter(code="""
+                                                    var labels = %s;
+                                                    return labels[tick] || tick;
+                                                """ % c_no_unit_names[s_no_unit_var])
+                    ), sizing_mode='stretch_width', linked_axes=False),
+                    pn.pane.DataFrame(df_plot, index=False, max_height=500))
+            else:
+                return pn.Column(
+                    pn.pane.HoloViews(df_plot.hvplot.scatter(
+                        x='Date',
+                        y=no_unit_keeplist,
+                        ylabel=c_field_list[s_no_unit_var],
+                        xlabel='Date',
+                        grid=True,
+                        min_height=600,
+                        yformatter=CustomJSTickFormatter(code="""
+                                    var labels = %s;
+                                    return labels[tick] || tick;
+                                """ % c_no_unit_names[s_no_unit_var])
+                    ), sizing_mode='stretch_width', linked_axes=False),
+                    pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        # add horizontal line if we are doing the differences plot
+        if b_diffs_flag:
+            return pn.Column(
+                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+                    x='Date',
+                    y=unit_keeplist,
+                    ylabel=unit_choice,
+                    xlabel='Date',
+                    grid=True,
+                    min_height=600
+                ), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.HoloViews(df_plot.hvplot.scatter(
+                    x='Date',
+                    y=no_unit_keeplist,
+                    ylabel=c_field_list[s_no_unit_var],
+                    xlabel='Date',
+                    grid=True,
+                    min_height=200,
+                    yformatter=CustomJSTickFormatter(code="""
+                                                var labels = %s;
+                                                return labels[tick] || tick;
+                                            """ % c_no_unit_names[s_no_unit_var])
+                ), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        else:
+            return pn.Column(
+                pn.pane.HoloViews(df_plot.hvplot(
+                    x='Date',
+                    y=unit_keeplist,
+                    ylabel=unit_choice,
+                    xlabel='Date',
+                    grid=True,
+                    min_height=600,
+                ), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.HoloViews(df_plot.hvplot.scatter(
+                    x='Date',
+                    y=no_unit_keeplist,
+                    ylabel=c_field_list[s_no_unit_var],
+                    xlabel='Date',
+                    grid=True,
+                    min_height=100,
+                    yformatter=CustomJSTickFormatter(code="""
+                        var labels = %s;
+                        return labels[tick] || tick;
+                    """ % c_no_unit_names[s_no_unit_var])
+                ), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.DataFrame(df_plot, index=False, max_height=500))
     # add horizontal line if we are doing the differences plot
     if b_diffs_flag:
         return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
@@ -104,7 +211,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
 
 def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units, period_choice, s_comparison,
-                    c_field_list, ls_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+                    c_field_list, li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
 
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
@@ -135,14 +242,16 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+    # create copy of var list since lists are mutable
+    var_list_final = var_list[:]
     # Unit conversion
     for var in var_list:
         try:
             original_unit = c_default_units[var].strip()
         except:
-            original_unit = None
-
+            original_unit = 'NONE'
         if original_unit not in ['CFS', 'TAF']:
+            var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
             pass
@@ -153,15 +262,18 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
+    if len(var_list_final) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
+
     # switch from variable name to description
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
-    var_list = [c_field_list[var] for var in var_list]
+    var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # sort for the years we want
         # see if any years are selected
-        if not ls_wyt_selected:
+        if not li_wyt_selected:
             return pn.pane.Markdown("## No data to display")
 
         # we do have some selected
@@ -172,7 +284,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         df_septembers = df_all_plot[df_all_plot['Month'] == 9]
 
         # pull the years and scenarios that match the selected wyts
-        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(ls_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
+        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(li_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
         # dictionary to hold {(scenario, WY): WYT}
         c_wy_to_wyt = {}
         for index, row in df_wy_to_use.iterrows():
@@ -196,7 +308,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT')or period_choice == 'SHASTABIN_':
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -207,9 +319,9 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 keeplist.append(name)
 
     for scenario in scenario_list:
-        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list]
+        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list_final]
         df_temp.reset_index(inplace=True, drop=True)
-        col_names = [f'{scenario}: {var}' for var in var_list]
+        col_names = [f'{scenario}: {var}' for var in var_list_final]
         df_temp.columns = col_names
         df_wide[col_names] = df_temp[col_names]       # WHAT THE HECK
         for name in col_names:
@@ -252,7 +364,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if water year type is selected as period
-    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -309,9 +421,15 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         c_wyt_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
-            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        if period_choice[:3] == 'WYT':
+            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        else:
+            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+
+        s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
             s_title += "## Water Year Total"
         else:
@@ -410,7 +528,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
 def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
-                         ls_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+                         li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
 
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
@@ -441,6 +559,9 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+    # create copy of var list since lists are mutable
+    var_list_final = var_list[:]
+
     # Unit conversion
     for var in var_list:
         try:
@@ -449,6 +570,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             original_unit = None
 
         if original_unit not in ['CFS', 'TAF']:
+            var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
             pass
@@ -459,15 +581,18 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
+    if len(var_list_final) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
+
     # switch from variable name to description
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
-    var_list = [c_field_list[var] for var in var_list]
+    var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # sort for the years we want
         # see if any years are selected
-        if not ls_wyt_selected:
+        if not li_wyt_selected:
             return pn.pane.Markdown("## No data to display")
 
         # we do have some selected
@@ -478,7 +603,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         df_septembers = df_all_plot[df_all_plot['Month'] == 9]
 
         # pull the years and scenarios that match the selected wyts
-        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(ls_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
+        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(li_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
         # dictionary to hold {(scenario, WY): WYT}
         c_wy_to_wyt = {}
         for index, row in df_wy_to_use.iterrows():
@@ -504,7 +629,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -515,9 +640,9 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 keeplist.append(name)
 
     for scenario in scenario_list:
-        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list]
+        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list_final]
         df_temp.reset_index(inplace=True, drop=True)
-        col_names = [f'{scenario}: {var}' for var in var_list]
+        col_names = [f'{scenario}: {var}' for var in var_list_final]
         df_temp.columns = col_names
         df_wide[col_names] = df_temp[col_names]       # WHAT THE HECK
         for name in col_names:
@@ -581,7 +706,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     # if water year type is selected as period
-    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -656,9 +781,15 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         c_wyt_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
-            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        s_title += ', '.join([c_wyt_names[period_choice][wyt] for wyt in ls_wyt_selected]) + ' Years \n'
+        if period_choice[:3] == 'WYT':
+            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        else:
+            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+
+        s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
             s_title += "## Water Year Total"
         else:
@@ -832,6 +963,9 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+    # create copy of var list since lists are mutable
+    var_list_final = var_list[:]
+
     # Unit conversion
     for var in var_list:
         try:
@@ -840,6 +974,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             original_unit = None
 
         if original_unit not in ['CFS', 'TAF']:
+            var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
             pass
@@ -850,12 +985,15 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
+    if len(var_list_final) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
+
     # switch from variable name to description
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
-    var_list = [c_field_list[var] for var in var_list]
+    var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # sort for the years we want
         # see if any years are selected
         if not li_wyt_selected:
@@ -892,7 +1030,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -901,7 +1039,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             df_wide[col_names] = df_temp[col_names]
             for name in col_names:
                 keeplist.append(name)
-    for var in var_list:
+    for var in var_list_final:
         for index, scenario in enumerate(scenario_list):
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[var]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -957,7 +1095,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                 df_stats = df_exceed.loc[i_exceedance_prob].to_frame()
 
     # if water year type is selected as period
-    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT'):
+    elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -1021,7 +1159,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             for s_scen in scenario_list:
                 s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
                 df_temp = df_wide[df_wide[s_scen_wyt_col] == i_wyt]
-                col_names = [f'{s_scen}: {var_list[0]}']
+                col_names = [f'{s_scen}: {var_list_final[0]}']
                 if stat_choice == 'Average':
                     df_temp = df_temp[col_names].mean()
                 elif stat_choice == 'Minimum':
@@ -1052,11 +1190,11 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                         df_exceed.interpolate(method='index', inplace=True)
                         df_temp = df_exceed.loc[i_exceedance_prob]
 
-                df_final.loc[(i_wyt, s_scen), var_list[0]] = df_temp.values
+                df_final.loc[(i_wyt, s_scen), var_list_final[0]] = df_temp.values
         for s_scen in scenario_list:
             s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
             df_temp = df_wide[df_wide[s_scen_wyt_col].isin(li_wyt_selected)]
-            col_names = [f'{s_scen}: {var_list[0]}']
+            col_names = [f'{s_scen}: {var_list_final[0]}']
             if stat_choice == 'Average':
                 df_temp = df_temp[col_names].mean()
             elif stat_choice == 'Minimum':
@@ -1086,21 +1224,26 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                     df_exceed.loc[i_exceedance_prob] = pd.Series(dtype='float32')
                     df_exceed.interpolate(method='index', inplace=True)
                     df_temp = df_exceed.loc[i_exceedance_prob]
-            df_final.loc[(6, s_scen), var_list[0]] = df_temp.values
+            df_final.loc[(99, s_scen), var_list_final[0]] = df_temp.values
 
         s_title = "## " + s_wyt_col + " "
 
         c_wyt_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
-            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'}
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        s_all_sel_wyt = 'All WYTs' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        if period_choice[:3] == 'WYT':
+            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        else:
+            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+
         for wyt in list(c_wyt_names.keys()):
-            c_wyt_names[wyt][6] = s_all_sel_wyt
+            c_wyt_names[wyt][99] = s_all_sel_wyt
         df_final.rename(index=c_wyt_names[period_choice], inplace=True)
 
-        s_title += 'All Water Year Types\n' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected]) + ' Years \n'
+        s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
             s_title += "## Water Year Total"
         else:
@@ -1110,7 +1253,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
         # if they have more than one variable selected, display a warning that only the first will display
         # b_diffs_flag is so that we only get one
-        if len(var_list) > 1 and b_diffs_flag:
+        if len(var_list_final) > 1 and b_diffs_flag:
             pn.state.notifications.position = 'center-center'
             pn.state.notifications.warning('If more than one variable is selected while filtering by water year type, the bar chart will only display the first variable.', duration=7000)
         if b_diffs_flag:
@@ -1118,7 +1261,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                              pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_final.hvplot.bar(
                                  title='', grid=True,
                                  xlabel=s_wyt_col + ', Scenario',
-                                 ylabel=stat_choice + ' Total ' + var_list[0] + ' (' + unit_choice + ')',
+                                 ylabel=stat_choice + ' Total ' + var_list_final[0] + ' (' + unit_choice + ')',
                                  rot=90,
                                  min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
                              pn.pane.DataFrame(df_plot, max_height=500))
@@ -1128,7 +1271,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                              pn.pane.HoloViews(df_final.hvplot.bar(
                                  title='', grid=True,
                                  xlabel=s_wyt_col + ', Scenario',
-                                 ylabel=stat_choice + ' Total ' + var_list[0] + ' (' + unit_choice + ')',
+                                 ylabel=stat_choice + ' Total ' + var_list_final[0] + ' (' + unit_choice + ')',
                                  rot=90,
                                  min_height=600), sizing_mode='stretch_width', linked_axes=False),
                              pn.pane.DataFrame(df_plot, max_height=500))
@@ -1258,7 +1401,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_stats.hvplot.bar(
                                                                                                   title='',  color='Color', grid=True,
                                                                                                   ylabel=stat_choice + ' Total ' + unit_choice,
-                                                                                                  ylim=(y_lower, y_upper),
+                                                                                                  ylim=(y_lower, y_upper), rot=20,
                                    min_height=600, legend=False), sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_plot, max_height=500))
 
@@ -1267,7 +1410,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             pn.pane.HoloViews(df_stats.hvplot.bar(
                                                   title='',  color='Color', grid=True,
                                                   ylabel=stat_choice + ' Total ' + unit_choice,
-                                                  ylim=(y_lower, y_upper),
+                                                  ylim=(y_lower, y_upper), rot=20,
                                                   min_height=600), sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_plot, max_height=500))
 
@@ -1301,6 +1444,9 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+    # create copy of var list since lists are mutable
+    var_list_final = var_list[:]
+
     # Unit conversion
     for var in var_list:
         try:
@@ -1309,6 +1455,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
             original_unit = None
 
         if original_unit not in ['CFS', 'TAF']:
+            var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
             pass
@@ -1319,9 +1466,12 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
+    if len(var_list_final) == 0:
+        return pn.pane.Markdown('## Select variables above to display plot.')
+
     # switch from variable name to description
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
-    var_list = [c_field_list[var] for var in var_list]
+    var_list_final = [c_field_list[var] for var in var_list_final]
 
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
@@ -1331,9 +1481,9 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
     keeplist = ['Month']
 
     for scenario in scenario_list:
-        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list]
+        df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list_final]
         df_temp.reset_index(inplace=True, drop=True)
-        col_names = [f'{scenario}: {var}' for var in var_list]
+        col_names = [f'{scenario}: {var}' for var in var_list_final]
         df_temp.columns = col_names
         df_wide[col_names] = df_temp[col_names]
         for name in col_names:
