@@ -447,14 +447,15 @@ def update_wyt_names(target, event):
                 'WYT_SAC_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
                 'WYT_SJR_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
                 'WYT_TRIN_': {'Extremely Wet': 1, 'Wet': 2, 'Normal': 3, 'Dry': 4, 'Critically Dry': 5},
-                'SHASTABIN_': {'1a': 1, '1b': 2, '2a': 3, '2b': 4, '3a': 5, '3b': 6}
+                'SHASTABIN_': {'1a': 1, '1b': 2, '2a': 3, '2b': 4, '3a': 5, '3b': 6},
+                'Default': [1, 2, 3, 4, 5]
             }
             try:
                 target.options = c_wyt_names[event.new]
-                target.value = []
+                target.value = list(c_wyt_names[event.new].values())
             except:
-                target.options = c_wyt_names['WYT_SAC_']
-                target.value = []
+                target.options = c_wyt_names['Default']
+                target.value = c_wyt_names['Default']
     return
 
 
