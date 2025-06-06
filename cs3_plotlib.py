@@ -112,37 +112,21 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
 
         # if we only have the no unit variable selected
         if len(var_list_final) == 1:
-            # add horizontal line if we are doing the differences plot
-            if b_diffs_flag:
-                return pn.Column(
-                    pn.pane.HoloViews(df_plot.hvplot.scatter(
-                        x='Date',
-                        y=no_unit_keeplist,
-                        ylabel=c_field_list[s_no_unit_var],
-                        xlabel='Date',
-                        grid=True,
-                        min_height=600,
-                        yformatter=CustomJSTickFormatter(code="""
-                                                    var labels = %s;
-                                                    return labels[tick] || tick;
-                                                """ % c_no_unit_names[s_no_unit_var])
-                    ), sizing_mode='stretch_width', linked_axes=False),
-                    pn.pane.DataFrame(df_plot, index=False, max_height=500))
-            else:
-                return pn.Column(
-                    pn.pane.HoloViews(df_plot.hvplot.scatter(
-                        x='Date',
-                        y=no_unit_keeplist,
-                        ylabel=c_field_list[s_no_unit_var],
-                        xlabel='Date',
-                        grid=True,
-                        min_height=600,
-                        yformatter=CustomJSTickFormatter(code="""
-                                    var labels = %s;
-                                    return labels[tick] || tick;
-                                """ % c_no_unit_names[s_no_unit_var])
-                    ), sizing_mode='stretch_width', linked_axes=False),
-                    pn.pane.DataFrame(df_plot, index=False, max_height=500))
+            return pn.Column(
+                pn.pane.HoloViews(df_plot.hvplot.scatter(
+                    x='Date',
+                    y=no_unit_keeplist,
+                    ylabel=c_field_list[s_no_unit_var],
+                    xlabel='Date',
+                    group_label='',
+                    grid=True,
+                    min_height=600,
+                    yformatter=CustomJSTickFormatter(code="""
+                                var labels = %s;
+                                return labels[tick] || tick;
+                            """ % c_no_unit_names[s_no_unit_var])
+                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
+                pn.pane.DataFrame(df_plot, index=False, max_height=500))
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(
@@ -150,22 +134,24 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     x='Date',
                     y=unit_keeplist,
                     ylabel=unit_choice,
+                    group_label='',
                     xlabel='Date',
                     grid=True,
                     min_height=600
-                ), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
                     ylabel=c_field_list[s_no_unit_var],
                     xlabel='Date',
+                    group_label='',
                     grid=True,
-                    min_height=200,
+                    min_height=300,
                     yformatter=CustomJSTickFormatter(code="""
                                                 var labels = %s;
                                                 return labels[tick] || tick;
                                             """ % c_no_unit_names[s_no_unit_var])
-                ), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         else:
             return pn.Column(
@@ -174,21 +160,23 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     y=unit_keeplist,
                     ylabel=unit_choice,
                     xlabel='Date',
+                    group_label='',
                     grid=True,
                     min_height=600,
-                ), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
                     ylabel=c_field_list[s_no_unit_var],
                     xlabel='Date',
+                    group_label='',
                     grid=True,
-                    min_height=100,
+                    min_height=300,
                     yformatter=CustomJSTickFormatter(code="""
                         var labels = %s;
                         return labels[tick] || tick;
                     """ % c_no_unit_names[s_no_unit_var])
-                ), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
     # add horizontal line if we are doing the differences plot
     if b_diffs_flag:
@@ -198,7 +186,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             xlabel='Date',
             grid=True,
             min_height=600
-        ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
 
     else:
         return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
@@ -207,7 +195,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             xlabel='Date',
             grid=True,
             min_height=600
-        ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
 
 def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units, period_choice, s_comparison,
@@ -354,14 +342,14 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 grid=True,
                 ylabel='Total ' + unit_choice,
                 xlabel='Year',
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
                 min_height=600,
                 grid=True,
                 ylabel='Total ' + unit_choice,
                 xlabel='Year',
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if water year type is selected as period
     elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
@@ -445,7 +433,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 grid=True,
                 xlabel='Water Year',
                 ylabel='Total ' + unit_choice,
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
             return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
@@ -453,7 +441,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 grid=True,
                 xlabel='Water Year',
                 ylabel='Total ' + unit_choice,
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # selected a month
     elif isinstance(period_choice, int):
@@ -474,7 +462,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
@@ -483,7 +471,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if they picked a partial month
     else:
@@ -515,7 +503,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 ylabel='Total ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
@@ -524,7 +512,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                 ylabel='Total ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
 def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
@@ -692,7 +680,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
@@ -703,7 +691,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     # if water year type is selected as period
     elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
@@ -807,7 +795,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(s_title, pn.pane.HoloViews(df_exceed.hvplot(
@@ -818,7 +806,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
 
     # month choice
@@ -858,7 +846,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
@@ -869,7 +857,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     else:
         # pull out start and stop months and then create a list of all the months in between
@@ -917,7 +905,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
             return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
@@ -928,7 +916,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
 def plot_bars(df_all, period_choice, var_list, scenario_list,
               unit_choice, stat_choice, c_default_units, s_comparison, c_field_list,
@@ -1541,7 +1529,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
             xlabel='Month',
             ylabel=stat_choice + ' ' + unit_choice,
             grid=True
-        ),
+        ).opts(legend_position='bottom', legend_cols=1),
             sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_wide, index=False, max_height=500))
     else:
@@ -1551,6 +1539,6 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
             xlabel='Month',
             ylabel=stat_choice + ' ' + unit_choice,
             grid=True
-        ),
+        ).opts(legend_position='bottom', legend_cols=1),
             sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_wide, index=False, max_height=500))
