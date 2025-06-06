@@ -447,6 +447,10 @@ def update_wyt_names(target, event):
                 'WYT_SAC_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
                 'WYT_SJR_': {'Wet': 1, 'Above Normal': 2, 'Below Normal': 3, 'Dry': 4, 'Critically Dry': 5},
                 'WYT_TRIN_': {'Extremely Wet': 1, 'Wet': 2, 'Normal': 3, 'Dry': 4, 'Critically Dry': 5},
+                'WYT_SHASTA_CVP_': {'Non-Critical': 0, 'ShastaCritical': 1},
+                'WYT_FEATHER_': {'Non-Critical': 1, 'Critically Dry': 2},
+                'WYT_SJRRP_DV': {'Wet': 1, 'Normal-Wet': 2, 'Normal-Dry': 3, 'Dry': 4, 'Critical High': 5, 'Critical Low': 6},
+                'WYT_AMERD983_CVP_': {'Non-Critical': 1, 'Critically Dry': 2},
                 'SHASTABIN_': {'1a': 1, '1b': 2, '2a': 3, '2b': 4, '3a': 5, '3b': 6},
                 'Default': [1, 2, 3, 4, 5]
             }

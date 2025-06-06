@@ -107,9 +107,19 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SHASTA_CVP_': {0: 'Non-Critical', 1: 'ShastaCritical'},
+            'WYT_FEATHER_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'WYT_SJRRP_DV': {1: 'Wet', 2: 'Normal-Wet', 3: 'Normal-Dry', 4: 'Dry', 5: 'Critical High', 6: 'Critical Low'},
+            'WYT_AMERD983_CVP_': {1: 'Non-Critical', 2: 'Critically Dry'},
             'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-
+        if s_no_unit_var not in c_no_unit_names.keys():
+            yformatter=None
+        else:
+            yformatter = CustomJSTickFormatter(code="""
+                                            var labels = %s;
+                                            return labels[tick] || tick;
+                                         """ % c_no_unit_names[s_no_unit_var])
         # if we only have the no unit variable selected
         if len(var_list_final) == 1:
             return pn.Column(
@@ -121,10 +131,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     group_label='',
                     grid=True,
                     min_height=600,
-                    yformatter=CustomJSTickFormatter(code="""
-                                var labels = %s;
-                                return labels[tick] || tick;
-                            """ % c_no_unit_names[s_no_unit_var])
+                    yformatter=yformatter
                 ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         # add horizontal line if we are doing the differences plot
@@ -146,11 +153,8 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     xlabel='Date',
                     group_label='',
                     grid=True,
-                    min_height=300,
-                    yformatter=CustomJSTickFormatter(code="""
-                                                var labels = %s;
-                                                return labels[tick] || tick;
-                                            """ % c_no_unit_names[s_no_unit_var])
+                    min_height=400,
+                    yformatter=yformatter
                 ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         else:
@@ -171,11 +175,8 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     xlabel='Date',
                     group_label='',
                     grid=True,
-                    min_height=300,
-                    yformatter=CustomJSTickFormatter(code="""
-                        var labels = %s;
-                        return labels[tick] || tick;
-                    """ % c_no_unit_names[s_no_unit_var])
+                    min_height=400,
+                    yformatter=yformatter
                 ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
     # add horizontal line if we are doing the differences plot
@@ -406,16 +407,23 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             df_plot = df_grouped[keeplist]
         s_title = "## " + s_wyt_col + " "
 
-        c_wyt_names = {
+        c_no_unit_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SHASTA_CVP_': {0: 'Non-Critical', 1: 'ShastaCritical'},
+            'WYT_FEATHER_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'WYT_SJRRP_DV': {1: 'Wet', 2: 'Normal-Wet', 3: 'Normal-Dry', 4: 'Dry', 5: 'Critical High', 6: 'Critical Low'},
+            'WYT_AMERD983_CVP_': {1: 'Non-Critical', 2: 'Critically Dry'},
             'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        if period_choice[:3] == 'WYT':
-            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
-        else:
-            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        try:
+            if period_choice[:3] == 'WYT':
+                s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join([c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+            else:
+                s_all_sel_wyt = ', '.join([c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+        except:
+            s_all_sel_wyt = ', '.join([str(wyt) for wyt in li_wyt_selected])
 
         s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
@@ -766,16 +774,24 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         s_title = "## " + s_wyt_col + " "
 
-        c_wyt_names = {
+        c_no_unit_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SHASTA_CVP_': {0: 'Non-Critical', 1: 'ShastaCritical'},
+            'WYT_FEATHER_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'WYT_SJRRP_DV': {1: 'Wet', 2: 'Normal-Wet', 3: 'Normal-Dry', 4: 'Dry', 5: 'Critical High', 6: 'Critical Low'},
+            'WYT_AMERD983_CVP_': {1: 'Non-Critical', 2: 'Critically Dry'},
             'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        if period_choice[:3] == 'WYT':
-            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
-        else:
-            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        try:
+            if period_choice[:3] == 'WYT':
+                s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join(
+                    [c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+            else:
+                s_all_sel_wyt = ', '.join([c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+        except:
+            s_all_sel_wyt = ', '.join([str(wyt) for wyt in li_wyt_selected])
 
         s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
@@ -1216,20 +1232,35 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
         s_title = "## " + s_wyt_col + " "
 
-        c_wyt_names = {
+        c_no_unit_names = {
             'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
             'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SHASTA_CVP_': {0: 'Non-Critical', 1: 'ShastaCritical'},
+            'WYT_FEATHER_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'WYT_SJRRP_DV': {1: 'Wet', 2: 'Normal-Wet', 3: 'Normal-Dry', 4: 'Dry', 5: 'Critical High', 6: 'Critical Low'},
+            'WYT_AMERD983_CVP_': {1: 'Non-Critical', 2: 'Critically Dry'},
             'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
-        if period_choice[:3] == 'WYT':
-            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == 5 else ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
-        else:
-            s_all_sel_wyt = ', '.join([c_wyt_names[period_choice][wyt] for wyt in li_wyt_selected])
+        try:
+            if period_choice[:3] == 'WYT':
+                s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join(
+                    [c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+            else:
+                s_all_sel_wyt = ', '.join([c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+        except:
+            c_no_unit_names[period_choice] = {wyt: wyt for wyt in li_wyt_selected}
+            s_all_sel_wyt = 'All Water Year Types' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join(
+                [c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
 
-        for wyt in list(c_wyt_names.keys()):
-            c_wyt_names[wyt][99] = s_all_sel_wyt
-        df_final.rename(index=c_wyt_names[period_choice], inplace=True)
+        try:
+            for wyt in list(c_no_unit_names.keys()):
+                c_no_unit_names[wyt][99] = s_all_sel_wyt
+            df_final.rename(index=c_no_unit_names[period_choice], inplace=True)
+        except:
+            for wyt in list(c_no_unit_names.keys()):
+                c_no_unit_names[wyt][99] = s_all_sel_wyt
+            df_final.rename(index=c_no_unit_names[period_choice], inplace=True)
 
         s_title += s_all_sel_wyt + ' Years \n'
         if b_wyt_period_year:
