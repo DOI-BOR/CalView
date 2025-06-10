@@ -297,7 +297,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT')or period_choice == 'SHASTABIN_':
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -1433,7 +1433,10 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                                                   min_height=600), sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_plot, max_height=500))
 
-def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c_default_units, s_comparison, c_field_list):
+
+def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
+                    stat_choice, c_default_units, s_comparison,
+                    c_field_list, period_choice, li_wyt_selected):
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1492,12 +1495,81 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
     df_all_plot.rename(c_field_list, axis='columns', inplace=True)
     var_list_final = [c_field_list[var] for var in var_list_final]
 
+    # if we are sorting by WYT we need to do some work before switching to wide frame
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
+        # sort for the years we want
+        # see if any years are selected
+        if not li_wyt_selected:
+            return pn.pane.Markdown("## No data to display")
+
+        # we do have some selected
+        # what the column with the wyt is called
+        s_wyt_col = c_field_list[period_choice]
+
+        # select just september since that will have the correct wyt
+        df_septembers = df_all_plot[df_all_plot['Month'] == 9]
+
+        # pull the years and scenarios that match the selected wyts
+        df_wy_to_use = df_septembers[df_septembers[s_wyt_col].isin(li_wyt_selected)][['Scenario', 'WY', s_wyt_col]]
+        # dictionary to hold {(scenario, WY): WYT}
+        c_wy_to_wyt = {}
+        for index, row in df_wy_to_use.iterrows():
+            c_wy_to_wyt[(row['Scenario'], row['WY'])] = row[s_wyt_col]
+
+        # Assign wyt column to be the final wyt
+        def wy_to_wyt(wyt_dict, scen, year):
+            try:
+                return wyt_dict[(scen, year)]
+            except:
+                return np.nan
+
+        df_all_plot[s_wyt_col] = df_all_plot.apply(lambda row: wy_to_wyt(c_wy_to_wyt, row['Scenario'], row['WY']), axis=1)
+
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
     df_wide[['Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['Month']].reset_index(drop=True)
     df_wide.reset_index(inplace=True, drop=True)
 
     keeplist = ['Month']
+
+    # this will stay empty unless we have a wyt selected
+    s_title = ''
+
+    # if grouping by wyt we need to include that variable
+    if (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
+        # to hold the wyt columns so we can filter with them but they dont end up in keeplist
+        ls_wyt_cols = []
+        for scenario in scenario_list:
+            df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
+            df_temp.reset_index(inplace=True, drop=True)
+            col_names = [f'{scenario}: {s_wyt_col}']
+            df_temp.columns = col_names
+            df_wide[col_names] = df_temp[col_names]
+            for name in col_names:
+                ls_wyt_cols.append(name)
+        df_wide = df_wide.dropna(subset=ls_wyt_cols, how='all')
+        # create a title that displays the WYTs
+        c_no_unit_names = {
+            'WYT_SAC_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SJR_': {1: 'Wet', 2: 'Above Normal', 3: 'Below Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_TRIN_': {1: 'Extremely Wet', 2: 'Wet', 3: 'Normal', 4: 'Dry', 5: 'Critically Dry'},
+            'WYT_SHASTA_CVP_': {0: 'Non-Critical', 1: 'ShastaCritical'},
+            'WYT_FEATHER_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'WYT_SJRRP_DV': {1: 'Wet', 2: 'Normal-Wet', 3: 'Normal-Dry', 4: 'Dry', 5: 'Critical High', 6: 'Critical Low'},
+            'WYT_AMERD983_CVP_': {1: 'Non-Critical', 2: 'Critically Dry'},
+            'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
+        }
+        try:
+            if period_choice[:3] == 'WYT':
+                s_all_sel_wyt = 'All' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join(
+                    [c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+            else:
+                s_all_sel_wyt = ', '.join([c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+        except:
+            c_no_unit_names[period_choice] = {wyt: wyt for wyt in li_wyt_selected}
+            s_all_sel_wyt = 'All' if len(li_wyt_selected) == len(list(c_no_unit_names[period_choice].keys())) else ', '.join(
+                [c_no_unit_names[period_choice][wyt] for wyt in li_wyt_selected])
+        s_title = '## ' + s_wyt_col + ': ' + s_all_sel_wyt + ' Years'
 
     for scenario in scenario_list:
         df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][var_list_final]
@@ -1507,7 +1579,6 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
         df_wide[col_names] = df_temp[col_names]
         for name in col_names:
             keeplist.append(name)
-
     df_grouped = df_wide[keeplist].groupby('Month')
 
     if stat_choice == 'Average':
@@ -1554,7 +1625,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
 
     # if doing difference plot, add horizontal line
     if b_diffs_flag:
-        return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+        return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
             x='Month',
             min_height=600,
             xlabel='Month',
@@ -1564,7 +1635,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice, stat_choice, c
             sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_wide, index=False, max_height=500))
     else:
-        return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
+        return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot(
             x='Month',
             min_height=600,
             xlabel='Month',

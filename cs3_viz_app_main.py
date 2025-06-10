@@ -702,7 +702,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         stat_choice=monthly_stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
-        c_field_list=c_field_list)
+        c_field_list=c_field_list,
+        period_choice=period_selector,
+        li_wyt_selected=wyt_selector
+    )
 
     bound_monthly_diffs_plot = pn.bind(
         monthly_pattern,
@@ -713,7 +716,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         stat_choice=monthly_stat_sel,
         c_default_units=c_default_units,
         s_comparison=s_comparison,
-        c_field_list=c_field_list)
+        c_field_list=c_field_list,
+        period_choice=period_selector,
+        li_wyt_selected=wyt_selector
+    )
 
     ts_title = pn.pane.Markdown("# Timeseries Plot"
                                 )
