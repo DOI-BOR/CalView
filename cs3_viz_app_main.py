@@ -199,8 +199,8 @@ def add_run_names_widget(event):
         > S_FOLSM Folsom Storage
         >
         > S_SHSTA Shasta Storage
-        
-        ...
+        >
+        > ...
         """, renderer='markdown')
         override_TR_fields_instructions_tooltip = pn.widgets.TooltipIcon(value='A default list of fields and descriptions is built in. If you want to override this list, upload a new list here. If no file is selected, the built-in list is used.')
         field_column.append(pn.Column(pn.Row(override_TR_fields_instructions, override_TR_fields_instructions_tooltip), override_TR_fields_instructions_deatils))
@@ -225,15 +225,15 @@ def add_run_names_widget(event):
         > S_FOLSM Folsom Storage
         >
         > S_SHSTA Shasta Storage
-        
-        ...
+        >
+        >...
         
         """, renderer='markdown')
         add_field_instructions_tooltip = pn.widgets.TooltipIcon(value='If you want to include fields that are not in the default list, add them here. If left blank, only the default list will be pulled from files.')
         field_column.append(pn.Column(pn.Row(add_field_instructions, add_field_instructions_tooltip), add_field_instructions_details))
         field_col_tracker.append("add_field_instructions")
 
-        add_field_text = pn.widgets.TextAreaInput(name='', placeholder='S_FOLSM\tFolsom Storage\nS_SHSTA\tShasta Storage\n...', auto_grow=True, width=500)
+        add_field_text = pn.widgets.TextAreaInput(name='', placeholder='S_FOLSM\tFolsom Storage\nS_SHSTA\tShasta Storage', auto_grow=True, width=500)
 
         field_column.append(add_field_text)
         field_col_tracker.append("add_field_text")
