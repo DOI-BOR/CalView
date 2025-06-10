@@ -77,6 +77,7 @@ def update_dss_file_widget(event):
         #Add back dss_file widget with updated file pattern
         if event.new == "New CalSim outputs":
             o_instructions = pn.pane.Markdown("### Select the DSS files to be read in.")
+            o_instructions_tooltip = pn.widgets.TooltipIcon(value="Move all DSS files from 'File Browser' section to 'Selected files' section then click 'Continue'")
             dss_file = pn.widgets.FileSelector(
                 name='Select CalSim output DSS file for new run or pickle file for previous run',
                 file_pattern = "*.dss",
@@ -86,6 +87,7 @@ def update_dss_file_widget(event):
             )
         else:
             o_instructions = pn.pane.Markdown('### <span style="color:red">Select the pickle files previously created (diffs.pkl, units.pkl, values.pkl, and fields.pkl)</span>')
+            o_instructions_tooltip = pn.widgets.TooltipIcon(value="Move the four pkl files from 'File Browser' section to 'Selected files' section then click 'Continue'")
             dss_file = pn.widgets.FileSelector(
                 name='Select CalSim output DSS file for new run or pickle file for previous run',
                 file_pattern="*.pkl",
@@ -95,7 +97,7 @@ def update_dss_file_widget(event):
             )
 
         # replace widget and instructions
-        file_picker_column.insert(2, o_instructions)
+        file_picker_column.insert(2, pn.Row(o_instructions, o_instructions_tooltip))
         col_tracker.insert(2, "instructions")
         file_picker_column.insert(3, dss_file)
         col_tracker.insert(3, "dss_file")
@@ -134,10 +136,14 @@ def add_run_names_widget(event):
         if "dss" in files[0].rsplit(".", 1)[1]:
             run_name_instructions = pn.pane.Markdown(""" 
                 # Enter a run name for each file (e.g. Baseline, Alt1, etc.). 
-                
+                """, renderer='markdown'
+                                                     )
+            run_name_instructions_comparison = pn.pane.Markdown("""                
                 ## <span style="color:red">One run must be marked for comparison.</span>
-                """, renderer='markdown')
-            run_name_column.append(run_name_instructions)
+                """, renderer='markdown'
+                                                                )
+            run_name_instructions_tooltip = pn.widgets.TooltipIcon(value='A plot of differences will be created based off this scenario.')
+            run_name_column.append(pn.Column(run_name_instructions, pn.Row(run_name_instructions_comparison, run_name_instructions_tooltip)))
             run_name_col_tracker.append("run_name_instructions")
 
             #have user provide run names for each file, new scenario has been selected
@@ -146,12 +152,13 @@ def add_run_names_widget(event):
 
                 comparison_check = pn.widgets.Checkbox(name='Comparison scenario')
                 dss_run_name = pn.widgets.TextInput(width=500, placeholder='Enter name for file')
+                dss_run_name_tooltip = pn.widgets.TooltipIcon(value='Enter the name you want displayed for this run.')
 
                 run_name_column.append(dss_run_file_label)
                 run_name_col_tracker.append("dss_run_file_label")
                 run_name_column.append(comparison_check)
                 run_name_col_tracker.append("dss_comparison_checkbox")
-                run_name_column.append(dss_run_name)
+                run_name_column.append(pn.Row(dss_run_name, dss_run_name_tooltip))
                 run_name_col_tracker.append("dss_run_name")
 
         #using picked files
@@ -180,7 +187,8 @@ def add_run_names_widget(event):
 
         # add option to override TR_fields.txt
         override_TR_fields_instructions = pn.pane.Markdown("""
-        # OPTIONAL override default fields:
+        # OPTIONAL override default fields:""", renderer='markdown')
+        override_TR_fields_instructions_deatils = pn.pane.Markdown("""
         
         ## If you would like to override the built in default fields, select a text file with your preferred fields.
         
@@ -194,8 +202,8 @@ def add_run_names_widget(event):
         
         ...
         """, renderer='markdown')
-
-        field_column.append(override_TR_fields_instructions)
+        override_TR_fields_instructions_tooltip = pn.widgets.TooltipIcon(value='A default list of fields and descriptions is built in. If you want to override this list, upload a new list here. If no file is selected, the built-in list is used.')
+        field_column.append(pn.Column(pn.Row(override_TR_fields_instructions, override_TR_fields_instructions_tooltip), override_TR_fields_instructions_deatils))
         field_col_tracker.append("override_instructions")
 
         override_file = pn.widgets.FileInput(accept='.txt', multiple=False, max_width=500)
@@ -205,7 +213,8 @@ def add_run_names_widget(event):
 
         #Also add optional field add text box
         add_field_instructions = pn.pane.Markdown("""
-        # OPTIONAL additional fields: 
+        # OPTIONAL additional fields: """, renderer='markdown')
+        add_field_instructions_details = pn.pane.Markdown("""
         
         ## Add additional fields to visualize that are not present in the default list (or your chosen list). 
         
@@ -220,7 +229,8 @@ def add_run_names_widget(event):
         ...
         
         """, renderer='markdown')
-        field_column.append(add_field_instructions)
+        add_field_instructions_tooltip = pn.widgets.TooltipIcon(value='If you want to include fields that are not in the default list, add them here. If left blank, only the default list will be pulled from files.')
+        field_column.append(pn.Column(pn.Row(add_field_instructions, add_field_instructions_tooltip), add_field_instructions_details))
         field_col_tracker.append("add_field_instructions")
 
         add_field_text = pn.widgets.TextAreaInput(name='', placeholder='S_FOLSM\tFolsom Storage\nS_SHSTA\tShasta Storage\n...', auto_grow=True, width=500)
@@ -284,7 +294,7 @@ def update_run_names(event):
         # Get indices of dss run names
         dss_name_indices = [i for i, x in enumerate(run_name_col_tracker) if x == "dss_run_name"]
         # get the value of the checkbox for each run
-        comparison_indices = [run_name_column[i].value for i, x in enumerate(run_name_col_tracker) if x == "dss_comparison_checkbox"]
+        comparison_indices = [run_name_column[i][0].value for i, x in enumerate(run_name_col_tracker) if x == "dss_comparison_checkbox"]
 
         # Get file names
         files = file_picker_column[col_tracker.index("dss_file")].value
@@ -814,6 +824,7 @@ make_archive = False
 file_picker_title = pn.pane.Markdown("""
     # Select Files
 """)
+file_picker_title_tooltip = pn.widgets.TooltipIcon(value='Once a set of DSS files have been read in the first time, they are saved to .pkl files that are much quicker to read in later. Note that you cannot pull additional fields when using the pkl files, the DSS files must be re-read in.', margin=0)
 
 #Create radio button widget to select running with old or new scenario
 old_new_sel = pn.widgets.RadioButtonGroup(
@@ -827,6 +838,7 @@ old_new_sel = pn.widgets.RadioButtonGroup(
 
 #Create file selector widget
 o_instructions = pn.pane.Markdown("### Select the DSS files to be read in.")
+o_instructions_tooltip = pn.widgets.TooltipIcon(value="Move all DSS files from 'File Browser' section to 'Selected files' section then click 'Continue'")
 dss_file = pn.widgets.FileSelector(
     name='Select CalSim output DSS file for new run or pickle file for previous run',
     file_pattern = "*.dss",
@@ -836,11 +848,11 @@ dss_file = pn.widgets.FileSelector(
 )
 
 #Add all widgets to file_picker_column
-file_picker_column.append(file_picker_title)
+file_picker_column.append(pn.Row(file_picker_title, file_picker_title_tooltip))
 col_tracker.append("file_picker_title")
 file_picker_column.append(old_new_sel)
 col_tracker.append("old_new_sel")
-file_picker_column.append(o_instructions)
+file_picker_column.append(pn.Row(o_instructions, o_instructions_tooltip))
 col_tracker.append("instructions")
 file_picker_column.append(dss_file)
 col_tracker.append("dss_file")
