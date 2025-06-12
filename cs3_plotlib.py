@@ -521,7 +521,8 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
 def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
-                         li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+                         li_wyt_selected, b_wyt_period_year, li_wyt_period_months,
+                         b_show_year):
 
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
@@ -660,9 +661,8 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         # Can't sum dates: drop
         df_wide = df_wide.drop('Date', axis=1)
         df_grouped = df_wide.groupby(by=[period_choice]).agg(agg_func)
-        df_grouped.reset_index(inplace=True)
 
-        df_exceed = pd.DataFrame(index=df_grouped.index)
+        df_exceed = pd.DataFrame(index=list(range(df_grouped.shape[0])))
 
         # add exceedance probabilities
         i_n = df_grouped.shape[0]
@@ -671,6 +671,9 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         for var in keeplist:
             if var != 'Date':
+                if b_show_year:
+                    l_years_sorted = df_grouped[var].sort_values().index
+                    df_exceed[var+' (Year)'] = l_years_sorted
                 l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
                 df_exceed[var] = l_sorted
 
@@ -679,6 +682,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         if b_diffs_flag:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -690,6 +694,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         else:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -720,9 +725,8 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
             # get the year totals/avgs
             df_grouped = df_wide.groupby(by=['WY']).agg(agg_func)
-            df_grouped.reset_index(inplace=True)
 
-            df_exceed = pd.DataFrame(index=df_grouped.index)
+            df_exceed = pd.DataFrame(index=list(range(df_grouped.shape[0])))
 
             # add exceedance probabilities
             i_n = df_grouped.shape[0]
@@ -731,6 +735,9 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
             for var in keeplist[len(scenario_list):]:
                 if var != 'Date':
+                    if b_show_year:
+                        l_years_sorted = df_grouped[var].sort_values().index
+                        df_exceed[var + ' (Year)'] = l_years_sorted
                     l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
                     df_exceed[var] = l_sorted
 
@@ -755,9 +762,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             # get the year totals/avgs
             df_grouped = df_wide.groupby(by=['WY']).agg(agg_func)
 
-            df_grouped.reset_index(inplace=True)
-
-            df_exceed = pd.DataFrame(index=df_grouped.index)
+            df_exceed = pd.DataFrame(index=list(range(df_grouped.shape[0])))
 
             # add exceedance probabilities
             i_n = df_grouped.shape[0]
@@ -765,9 +770,11 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             df_exceed['exceedance_probability'] = ld_probabilities
 
             for var in keeplist[len(scenario_list):]:
-                if var != 'Date':
-                    l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
-                    df_exceed[var] = l_sorted
+                if b_show_year:
+                    l_years_sorted = df_grouped[var].sort_values().index
+                    df_exceed[var + ' (Year)'] = l_years_sorted
+                l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
+                df_exceed[var] = l_sorted
 
         s_title = "## " + s_wyt_col + " "
 
@@ -802,6 +809,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         if b_diffs_flag:
             return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=[var for var in df_exceed.columns if '(Year)' not in var and 'exceedance_probability' != var],
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -813,6 +821,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         else:
             return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=[var for var in df_exceed.columns if '(Year)' not in var and 'exceedance_probability' != var],
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -831,9 +840,8 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         # Can't sum dates: drop
         df_wide = df_wide.drop('Date', axis=1)
         df_grouped = df_wide.groupby(by=['DY']).agg(agg_func)
-        df_grouped.reset_index(inplace=True)
-        # plot_pos = df_grouped.index
-        df_exceed = pd.DataFrame(index=df_grouped.index)
+
+        df_exceed = pd.DataFrame(index=list(range(df_grouped.shape[0])))
 
         # add exceedance probabilities
         i_n = df_grouped.shape[0]
@@ -841,9 +849,11 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         df_exceed['exceedance_probability'] = ld_probabilities
 
         for var in keeplist:
-            if var != 'Date':
-                l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
-                df_exceed[var] = l_sorted
+            if b_show_year:
+                l_years_sorted = df_grouped[var].sort_values().index
+                df_exceed[var+' (Year)'] = l_years_sorted
+            l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
+            df_exceed[var] = l_sorted
 
         c_num_to_month = {1: "January", 2: "February", 3: "March", 4: "April",
                           5: "May", 6: "June", 7: "July", 8: "August",
@@ -853,6 +863,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         if b_diffs_flag:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -864,6 +875,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         else:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -894,9 +906,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         else:
             df_grouped = df_wide.groupby(by=['DY']).agg(agg_func)
 
-        df_grouped.reset_index(inplace=True)
-        # plot_pos = df_grouped.index
-        df_exceed = pd.DataFrame(index=df_grouped.index)
+        df_exceed = pd.DataFrame(index=list(range(df_grouped.shape[0])))
 
         # add exceedance probabilities
         i_n = df_grouped.shape[0]
@@ -904,14 +914,17 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         df_exceed['exceedance_probability'] = ld_probabilities
 
         for var in keeplist:
-            if var != 'Date':
-                l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
-                df_exceed[var] = l_sorted
+            if b_show_year:
+                l_years_sorted = df_grouped[var].sort_values().index
+                df_exceed[var + ' (Year)'] = l_years_sorted
+            l_sorted = df_grouped[var].sort_values().reset_index(drop=True)
+            df_exceed[var] = l_sorted
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',
@@ -923,6 +936,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
         else:
             return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
+                y=keeplist,
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Probability of Exceedance',

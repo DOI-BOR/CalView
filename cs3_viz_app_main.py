@@ -584,6 +584,10 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         width=400
     )
 
+    exceedance_show_year_check = pn.widgets.Checkbox(name='Show year in table')
+    exceedance_show_year_check_diffs = pn.widgets.Checkbox(name='Show year in table')
+
+
     # remove comparison scen from the differences dataframe as all values are zero
     df_diffs = df_diffs[df_diffs.Scenario != s_comparison]
 
@@ -654,7 +658,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_field_list=c_field_list,
         li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
-        li_wyt_period_months=wyt_period_selector
+        li_wyt_period_months=wyt_period_selector,
+        b_show_year=exceedance_show_year_check
     )
 
     bound_plot_diffs_exceedance = pn.bind(
@@ -669,7 +674,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
         c_field_list=c_field_list,
         li_wyt_selected=wyt_selector,
         b_wyt_period_year=wyt_period_selector_year,
-        li_wyt_period_months=wyt_period_selector
+        li_wyt_period_months=wyt_period_selector,
+        b_show_year=exceedance_show_year_check_diffs
     )
 
     bound_single_var_plot = pn.bind(
@@ -816,8 +822,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     grouped_plots.append(pn.Column(grouped_title,bound_plot_grouped))
     grouped_plots.append(pn.Column(grouped__diff_title,bound_plot_grouped_diff))
 
-    exceedance_plots.append(pn.Column(exceedance_title, bound_plot_exceedance))
-    exceedance_plots.append(pn.Column(exceedance_diff_title, bound_plot_diffs_exceedance))
+    exceedance_plots.append(pn.Column(exceedance_title, bound_plot_exceedance, exceedance_show_year_check))
+    exceedance_plots.append(pn.Column( exceedance_diff_title, bound_plot_diffs_exceedance, exceedance_show_year_check_diffs))
 
     monthly_plots.append(pn.Row(monthly_stat_sel))
     monthly_plots.append(pn.Row(pn.Column(monthly_title, bound_monthly_plot), pn.Column(monthly_diffs_title, bound_monthly_diffs_plot)))
