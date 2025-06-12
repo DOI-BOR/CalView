@@ -114,7 +114,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             'SHASTABIN_': {1: '1a', 2: '1b', 3: '2a', 4: '2b', 5: '3a', 6: '3b'}
         }
         if s_no_unit_var not in c_no_unit_names.keys():
-            yformatter=None
+            yformatter = None
         else:
             yformatter = CustomJSTickFormatter(code="""
                                             var labels = %s;
@@ -181,22 +181,22 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
     # add horizontal line if we are doing the differences plot
     if b_diffs_flag:
-        return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+        return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
             x='Date',
             ylabel=unit_choice,
             xlabel='Date',
             grid=True,
             min_height=600
-        ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
 
     else:
-        return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
+        return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
             x='Date',
             ylabel=unit_choice,
             xlabel='Date',
             grid=True,
             min_height=600
-        ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
+        )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, index=False, max_height=500))
 
 def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units, period_choice, s_comparison,
@@ -338,19 +338,19 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 min_height=600,
                 grid=True,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Year',
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
-            return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
                 min_height=600,
                 grid=True,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Year',
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if water year type is selected as period
     elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
@@ -435,21 +435,21 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
 
-            return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot.scatter(
+            return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
                 xlabel='Water Year',
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
         else:
-            return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot.scatter(
+            return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot.scatter(
                 y=keeplist[len(scenario_list):], # to avoid plotting the wyt
                 min_height=600,
                 grid=True,
                 xlabel='Water Year',
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # selected a month
     elif isinstance(period_choice, int):
@@ -465,22 +465,20 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                           9: "September", 10: "October", 11: "November", 12: "December"}
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
-                y=keeplist[1:],
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
-                y=keeplist[1:],
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
                 xlabel='Year',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if they picked a partial month
     else:
@@ -506,22 +504,20 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
-                y=keeplist[1:],
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Year',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_plot.hvplot(
-                y=keeplist[1:],
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
                 xlabel='Year',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
 def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
@@ -681,7 +677,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -689,10 +685,10 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -700,7 +696,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     # if water year type is selected as period
     elif (len(str(period_choice)) >= 3) and (period_choice[:3] == 'WYT') or period_choice == 'SHASTABIN_':
@@ -804,7 +800,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
+            return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -812,10 +808,10 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
-            return pn.Column(s_title, pn.pane.HoloViews(df_exceed.hvplot(
+            return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -823,7 +819,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
 
     # month choice
@@ -855,7 +851,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
@@ -863,10 +859,10 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=c_num_to_month[period_choice] + ' ' + unit_choice,
@@ -874,7 +870,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     else:
         # pull out start and stop months and then create a list of all the months in between
@@ -914,7 +910,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
-            return pn.Column(pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -922,10 +918,10 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
         else:
-            return pn.Column(pn.pane.HoloViews(df_exceed.hvplot(
+            return pn.Column(pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_exceed.hvplot(
                 x='exceedance_probability',
                 min_height=600,
                 ylabel=('Total ' if unit_choice == 'TAF' else 'Average ') + unit_choice,
@@ -933,7 +929,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                 flip_xaxis=True,
                 xformatter='%f%%',
                 grid=True
-            ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
+            )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
 def plot_bars(df_all, period_choice, var_list, scenario_list,
               unit_choice, stat_choice, c_default_units, s_comparison, c_field_list,
@@ -1152,12 +1148,6 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
             # get rid of other columns we dont need
             df_plot = df_grouped[keeplist]
-            # if stat_choice == 'Average':
-            #     df_stats = df_plot[keeplist[len(scenario_list):]].mean().to_frame()
-            # elif stat_choice == 'Minimum':
-            #     df_stats = df_plot[keeplist[len(scenario_list):]].min().to_frame()
-            # else:
-            #     df_stats = df_plot[keeplist[len(scenario_list):]].max().to_frame()
 
         df_final = pd.DataFrame(index=pd.MultiIndex.from_product([li_wyt_selected, scenario_list], names=[s_wyt_col, 'Scenario']))
         for i_wyt in li_wyt_selected:
@@ -1626,22 +1616,22 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
 
     # if doing difference plot, add horizontal line
     if b_diffs_flag:
-        return pn.Column(s_title, pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+        return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
             x='Month',
             min_height=600,
             xlabel='Month',
             ylabel=stat_choice + ' ' + unit_choice,
             grid=True
-        ).opts(legend_position='bottom', legend_cols=1),
+        )).opts(legend_position='bottom', legend_cols=1),
             sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_wide, index=False, max_height=500))
     else:
-        return pn.Column(s_title, pn.pane.HoloViews(df_plot.hvplot(
+        return pn.Column(s_title, pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
             x='Month',
             min_height=600,
             xlabel='Month',
             ylabel=stat_choice + ' ' + unit_choice,
             grid=True
-        ).opts(legend_position='bottom', legend_cols=1),
+        )).opts(legend_position='bottom', legend_cols=1),
             sizing_mode='stretch_width', linked_axes=False),
             pn.pane.DataFrame(df_wide, index=False, max_height=500))

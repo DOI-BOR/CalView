@@ -294,7 +294,7 @@ def update_run_names(event):
         # Get indices of dss run names
         dss_name_indices = [i for i, x in enumerate(run_name_col_tracker) if x == "dss_run_name"]
         # get the value of the checkbox for each run
-        comparison_indices = [run_name_column[i][0].value for i, x in enumerate(run_name_col_tracker) if x == "dss_comparison_checkbox"]
+        comparison_indices = [run_name_column[i].value for i, x in enumerate(run_name_col_tracker) if x == "dss_comparison_checkbox"]
 
         # Get file names
         files = file_picker_column[col_tracker.index("dss_file")].value
@@ -363,9 +363,9 @@ def update_run_names(event):
             # find where the box is checked for comparison and set somparison name tracker to files name
             if comparison_indices[file_index]:
                 # update global variable
-                s_comparison = run_name_column[run_index].value
+                s_comparison = run_name_column[run_index][0].value
 
-            runs.append([run_name_column[run_index].value, (files[file_index])])
+            runs.append([run_name_column[run_index][0].value, (files[file_index])])
         print(runs)
         append_list, baseline_stack, c_default_units, c_field_list = file_reader(runs, c_field_list, s_comparison)
         pickler(append_list, baseline_stack, c_default_units, c_field_list)

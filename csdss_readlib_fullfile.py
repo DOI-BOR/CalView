@@ -221,10 +221,6 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
     for t, ts in enumerate(list(c_target_ts_list_final.keys())):
         df_ts[ts] = ts_list[t].values
 
-    # Duplicate columns with other (cfs/taf) unit
-    durations = [t.day for t in
-                 times]  # list of month durations for our timeframe of interest
-
     df_ts.insert(0, 'DY', dy)
     df_ts.insert(0, 'WY', wy)
     df_ts.insert(0, 'Month', months)
