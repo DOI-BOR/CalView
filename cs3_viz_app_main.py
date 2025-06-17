@@ -587,12 +587,8 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     exceedance_show_year_check = pn.widgets.Checkbox(name='Show year in table')
     exceedance_show_year_check_diffs = pn.widgets.Checkbox(name='Show year in table')
 
-
     # remove comparison scen from the differences dataframe as all values are zero
     df_diffs = df_diffs[df_diffs.Scenario != s_comparison]
-
-    # Okay, so separate dfs isn't cutting it.
-    # Try turning off y-lim
 
     bound_plot_ts = pn.bind(
         plot_values,
@@ -788,7 +784,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
     # metadata for meta data tab
     run_names = {scen: c_default_units[scen] for scen in scenario_names}
     df_run_names = pd.DataFrame.from_dict(run_names, orient='index', columns=['File Name'])
-    df_run_names.index.names = ['Run Name']
+    df_run_names.index.name = 'Run Name'
 
     o_scen_names_title = pn.pane.Markdown("# Files and names")
 
@@ -797,11 +793,40 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
 
     o_field_names_title = pn.pane.Markdown("# Fields and descriptions")
 
+
+    c_calcs_for_calculated = {
+        'Total System Storage SWP and CVP': 'S_TRNTY + S_SHSTA + S_OROVL + S_FOLSM + S_SLUIS_CVP + S_SLUIS_SWP',
+        'Total Exports SWP and CVP': 'C_CAA003_SWP + C_DMC003 + C_CAA003_CVP',
+        'Total San Luis Storage SWP and CVP': 'S_SLUIS_CVP + S_SLUIS_SWP',
+        'Flow Shortage on Sac Reg for Salinity': 'MAX(MAX(RSREQSACDV, JPREQSACDV, EMREQSACDV, COREQSACDV) - (C_SAC041 + SP_SAC083_YBP037), 0)',
+        'Flow Shortage on X2 Delta Req Outflow': 'MAX(MRDO_FINALDV - NDOI, 0)',
+        'MRDO_SHORT': 'MRDO_FINALDV - NDOI_MIN',
+        'Combined Madera and Friant-Kern Canals Diversion': 'D_MLRTN_FRK000 + D_MLRTN_MDC006',
+        'Stanislaus River Delivery - Oakdale North / SSJID 1+2': 'D_STS059_OAK001 + D_SSJ004_61_PA1 + D_WDWRD_61_PA3 + D_WTPDGT_61_NU2',
+        'CVP Delivery Total': 'DEL_CVP_TOTAL_N + DEL_CVP_TOTAL_S',
+        'CVP Delivery PMI N (w CCWD)': 'DEL_CVP_PMI_N + D420',
+        'CVP Delivery North (w CCWD)': 'DEL_CVP_TOTAL_N - DEL_CVP_PMI_N + DEL_CVP_PMI_N_WAMR + D420'
+    }
+    c_used_calc_fields = {field: c_calcs_for_calculated[field] for field in c_calcs_for_calculated if field in c_field_list.keys()}
+    df_calc_fields = pd.DataFrame.from_dict(c_used_calc_fields, orient='index', columns=['Formula'])
+    df_calc_fields.index.name = 'Calculated Field'
+
+    o_calc_field_title = pn.pane.Markdown("# Calculated Fields")
+
     o_metadata = pn.Column(
         o_scen_names_title,
-        pn.pane.DataFrame(df_run_names, max_width=600),
-        o_field_names_title,
-        pn.pane.DataFrame(df_field_names, max_width=600)
+        pn.pane.DataFrame(df_run_names),
+        pn.Row(
+            pn.Column(
+                o_field_names_title,
+                pn.pane.DataFrame(df_field_names)
+            ),
+            pn.Column(
+                o_calc_field_title,
+                pn.pane.DataFrame(df_calc_fields)
+            )
+        )
+
     )
 
     #Add selectors to header row in template and refresh objects

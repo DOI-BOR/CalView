@@ -13,7 +13,6 @@ def get_vars_list(ls_vars, s_default):
     return [string for string in ls_vars if s_default in string]
 
 def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s_comparison, c_field_list):
-    print(time.time())
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -205,7 +204,6 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
 def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units, period_choice, s_comparison,
                     c_field_list, li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
-    print(time.time())
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -541,7 +539,6 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
                          li_wyt_selected, b_wyt_period_year, li_wyt_period_months,
                          b_show_year):
-    print(time.time())
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -977,7 +974,6 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 def plot_bars(df_all, period_choice, var_list, scenario_list,
               unit_choice, stat_choice, c_default_units, s_comparison, c_field_list,
               li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
-    print(time.time())
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all['Date']]
@@ -1479,7 +1475,6 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
                     stat_choice, c_default_units, s_comparison,
                     c_field_list, period_choice, li_wyt_selected):
-    print(time.time())
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
