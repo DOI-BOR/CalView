@@ -135,7 +135,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     grid=True,
                     min_height=600,
                     yformatter=yformatter
-                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
@@ -158,7 +158,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     grid=True,
                     min_height=400,
                     yformatter=yformatter
-                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         else:
             return pn.Column(
@@ -180,7 +180,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     grid=True,
                     min_height=400,
                     yformatter=yformatter
-                ).opts(legend_position='bottom', legend_cols=2), sizing_mode='stretch_width', linked_axes=False),
+                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
     # add horizontal line if we are doing the differences plot
     if b_diffs_flag:
