@@ -790,6 +790,7 @@ def create_widgets(scenario_names, c_field_list, df_all_data, c_default_units, d
 
     df_field_names = pd.DataFrame.from_dict(c_field_list, orient='index', columns=['Description'])
     df_field_names.index.name = 'Field'
+    df_field_names['Default Units'] = df_field_names.index.map(c_default_units)
 
     o_field_names_title = pn.pane.Markdown("# Fields and descriptions")
 
