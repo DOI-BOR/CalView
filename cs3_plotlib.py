@@ -292,7 +292,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
 
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
-    df_wide[['OctSeptYear', 'JanDecYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear','Month']].reset_index(drop=True)
+    df_wide[['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']].reset_index(drop=True)
     df_wide.reset_index(inplace=True, drop=True)
 
     #keeplist = ['Date']
@@ -328,8 +328,6 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     # grouping by period choice
     # if we chose a year option
     if period_choice in ["OctSeptYear", "JanDecYear", "MarFebYear"]:
-        if period_choice == "MarFebYear":
-            df_wide['MarFebYear'] = np.where(df_wide.Month >= 3, df_wide['JanDecYear'], df_wide['JanDecYear']-1)
         df_timecounts = df_wide.groupby(by=[period_choice]).count()
         droplist = df_timecounts[df_timecounts['Date'] < 12].index
         df_wide = df_wide[df_wide[period_choice].isin(droplist) == False]
@@ -629,7 +627,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
-    df_wide[['OctSeptYear', 'JanDecYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear','Month']].reset_index(drop=True)
+    df_wide[['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']].reset_index(drop=True)
     df_wide.reset_index(inplace=True, drop=True)
 
     # This will allow us to drop the columns used for sorting / aggregating once the
@@ -665,8 +663,6 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     # years @ start/end of run
     # period_choice = 'JanDecYear' #dbg only
     if period_choice in ['OctSeptYear', 'JanDecYear', 'MarFebYear']:
-        if period_choice == 'MarFebYear':
-            df_wide['MarFebYear'] = np.where(df_wide.Month >= 3, df_wide['JanDecYear'], df_wide['JanDecYear'] - 1)
         df_timecounts = df_wide.groupby(by=[period_choice]).count()
         droplist = df_timecounts[df_timecounts['Date'] < 12].index
         df_wide = df_wide[df_wide[period_choice].isin(droplist) == False]
@@ -1064,7 +1060,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
     # Sortable, filter to target scenarios and vars
     df_wide = pd.DataFrame(df_all_plot['Date'].unique(), columns=['Date'])
-    df_wide[['OctSeptYear', 'JanDecYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear', 'Month']].reset_index(drop=True)
+    df_wide[['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']] = df_all_plot.loc[df_all_plot['Scenario'] == scenario_list[0]][['OctSeptYear', 'JanDecYear', 'MarFebYear', 'Month']].reset_index(drop=True)
     df_wide.reset_index(inplace=True, drop=True)
 
     keeplist = []
@@ -1090,8 +1086,6 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 
     # ------- Agg ops below -------------
     if period_choice in ['OctSeptYear', 'JanDecYear', 'MarFebYear']:
-        if period_choice == "MarFebYear":
-            df_wide['MarFebYear'] = np.where(df_wide.Month >= 3, df_wide['JanDecYear'], df_wide['JanDecYear'] - 1)
         df_timecounts = df_wide.groupby(by=[period_choice]).count()
         droplist = df_timecounts[df_timecounts['Date'] < 12].index
         df_wide = df_wide[df_wide[period_choice].isin(droplist) == False]

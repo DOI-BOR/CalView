@@ -9,7 +9,7 @@ from multiprocessing import Pool
 from os import path
 
 # num_fixed = # of columns that are the same in all cases
-num_fixed = 6
+num_fixed = 7
 
 def get_trend_fields():
     # dictionary to hold fields and description in the form {field: description}
@@ -191,9 +191,9 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
 
     # Convert CY to delivery (contract) year
     if startDate_1.month < 3:
-        dy = [startDate_1.year - 1]
+        cy = [startDate_1.year - 1]
     else:
-        dy = startDate_1.year
+        cy = startDate_1.year
 
     # Note loops starts at 1 not zero
     for i in range(1, len(ts_list[0].values)):
@@ -213,9 +213,9 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
             wy = np.append(wy, current_time.year)
 
         if current_time.month < 3:
-            dy = np.append(dy, current_time.year - 1)
+            cy = np.append(cy, current_time.year - 1)
         else:
-            dy = np.append(dy, current_time.year)
+            cy = np.append(cy, current_time.year)
 
     df_ts = pd.DataFrame(index=times)
     for t, ts in enumerate(list(c_target_ts_list_final.keys())):
@@ -224,7 +224,8 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
         else:
             df_ts[ts] = ts_list[t].values
 
-    df_ts.insert(0, 'JanDecYear', dy)
+    df_ts.insert(0, 'JanDecYear', years)
+    df_ts.insert(0, 'MarFebYear', cy)
     df_ts.insert(0, 'OctSeptYear', wy)
     df_ts.insert(0, 'Month', months)
     df_ts.insert(0, 'Year', years)
