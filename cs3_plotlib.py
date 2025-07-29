@@ -3,16 +3,35 @@ import pandas as pd
 import numpy as np
 import panel as pn
 import holoviews as hv
-from panel.io import hold
 from bokeh.models import CustomJSTickFormatter
-import time
-from bokeh.models import WheelZoomTool
-from csdss_readlib_fullfile import file_reader, pickler, load_pickles, get_trend_fields
 
-def get_vars_list(ls_vars, s_default):
-    return [string for string in ls_vars if s_default in string]
 
 def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s_comparison, c_field_list):
+    """
+    Creates the timeseries plots
+
+    Parameters
+    ----------
+    scenario_list: list
+        Scenarios we want to plot
+    var_list: list
+        Fields we want to plot
+    unit_choice: str
+        Unit selection (CFS or TAF)
+    df_all: DataFrame
+        Data to be filtered and plotted
+    c_default_units: dict
+        Dictionary of default units for each field
+    s_comparison: str
+        Name of comparison scenario
+    c_field_list: dict
+        Dictionary of fields and descriptions
+
+    Returns
+    -------
+    Panel Object
+        Plot and table of data as a column
+    """
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -46,6 +65,9 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     b_no_unit_flag = False
     s_no_unit_var = ''
 
+    b_temp_flag = False
+    ls_temp_vars = []
+
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
     # Unit conversion
@@ -55,7 +77,11 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
         except:
             original_unit = None
 
-        if original_unit not in ['CFS', 'TAF']:
+        # if we have any temperature vars, keep them
+        if original_unit == 'TEMP':
+            b_temp_flag = True
+            ls_temp_vars.append(var)
+        elif original_unit not in ['CFS', 'TAF']:
             # if we have more than one variable with no units selected we are not going to use it
             if b_no_unit_flag:
                 if b_diffs_flag:
@@ -74,6 +100,11 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
         elif original_unit == 'TAF':
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
+
+    # If we found any temperature variables, we will only use those
+    if b_temp_flag:
+        var_list_final = ls_temp_vars
+        unit_choice = 'Degrees'
 
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
@@ -204,6 +235,39 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
 def plot_time_group(scenario_list, var_list, unit_choice, df_all,
                     c_default_units, period_choice, s_comparison,
                     c_field_list, li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+    """
+    Creates time aggregated plot
+
+    Parameters
+    ----------
+    scenario_list: list
+        Scenarios we want to plot
+    var_list: list
+        Fields we want to plot
+    unit_choice: str
+        Unit selection (CFS or TAF)
+    df_all: DataFrame
+        Data to be filtered and plotted
+    c_default_units: dict
+        Dictionary of default units for each field
+    period_choice: int or str
+        Time period selected
+    s_comparison: str
+        Name of comparison scenario
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    li_wyt_selected: list
+        Water year types selected for WYT time period
+    b_wyt_period_year: bool
+        If water year totals have been selected for WYT time period
+    li_wyt_period_months: list
+        Months selected for WYT time period
+
+    Returns
+    -------
+    Panel Object
+        Plot and table of data as a column
+    """
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -233,6 +297,9 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
+    b_temp_flag = False
+    ls_temp_vars = []
+
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
     # Unit conversion
@@ -241,7 +308,11 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             original_unit = c_default_units[var].strip()
         except:
             original_unit = 'NONE'
-        if original_unit not in ['CFS', 'TAF']:
+        # if we have any temperature vars, keep them
+        if original_unit == 'TEMP':
+            b_temp_flag = True
+            ls_temp_vars.append(var)
+        elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
@@ -253,6 +324,11 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
+    # If we found any temperature variables, we will only use those
+    if b_temp_flag:
+        var_list_final = ls_temp_vars
+        unit_choice = 'Degrees'
+        agg_func = 'mean'
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -537,6 +613,41 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
                          c_default_units, period_choice, s_comparison, c_field_list,
                          li_wyt_selected, b_wyt_period_year, li_wyt_period_months,
                          b_show_year):
+    """
+    Creates exceedance plots
+
+    Parameters
+    ----------
+    scenario_list: list
+        Scenarios we want to plot
+    var_list: list
+        Fields we want to plot
+    unit_choice: str
+        Unit selection (CFS or TAF)
+    df_all: DataFrame
+        Data to be filtered and plotted
+    c_default_units: dict
+        Dictionary of default units for each field
+    period_choice: int or str
+        Time period selected
+    s_comparison: str
+        Name of comparison scenario
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    li_wyt_selected: list
+        Water year types selected for WYT time period
+    b_wyt_period_year: bool
+        If water year totals have been selected for WYT time period
+    li_wyt_period_months: list
+        Months selected for WYT time period
+    b_show_year: bool
+        Whether to show the year in the table
+
+    Returns
+    -------
+    Panel Object
+            Plot and table of data as a column
+    """
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -569,14 +680,20 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
+    b_temp_flag = False
+    ls_temp_vars = []
+
     # Unit conversion
     for var in var_list:
         try:
             original_unit = c_default_units[var].strip()
         except:
             original_unit = None
-
-        if original_unit not in ['CFS', 'TAF']:
+        # if we have any temperature vars, keep them
+        if original_unit == 'TEMP':
+            b_temp_flag = True
+            ls_temp_vars.append(var)
+        elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
@@ -588,6 +705,11 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
+    # If we found any temperature variables, we will only use those
+    if b_temp_flag:
+        var_list_final = ls_temp_vars
+        unit_choice = 'Degrees'
+        agg_func = 'mean'
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -970,6 +1092,41 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
 def plot_bars(df_all, period_choice, var_list, scenario_list,
               unit_choice, stat_choice, c_default_units, s_comparison, c_field_list,
               li_wyt_selected, b_wyt_period_year, li_wyt_period_months):
+    """
+    Creates bar plot
+
+    Parameters
+    ----------
+    df_all: DataFrame
+        Data to be filtered and plotted
+    period_choice: int or str
+        Time period selected
+    var_list: list
+        Fields we want to plot
+    scenario_list: list
+        Scenarios we want to plot
+    unit_choice: str
+        Unit selection (CFS or TAF)
+    stat_choice: str
+        Statistic to calculate
+    c_default_units: dict
+        Dictionary of default units for each field
+    s_comparison: str
+        Name of comparison scenario
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    li_wyt_selected: list
+        Water year types selected for WYT time period
+    b_wyt_period_year: bool
+        If water year totals have been selected for WYT time period
+    li_wyt_period_months: list
+        Months selected for WYT time period
+
+    Returns
+    -------
+    Panel Object
+            Plot and table of data as a column
+    """
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all['Date']]
@@ -1002,14 +1159,20 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
+    b_temp_flag = False
+    ls_temp_vars = []
+
     # Unit conversion
     for var in var_list:
         try:
             original_unit = c_default_units[var].strip()
         except:
             original_unit = None
-
-        if original_unit not in ['CFS', 'TAF']:
+        # if we have any temperature vars, keep them
+        if original_unit == 'TEMP':
+            b_temp_flag = True
+            ls_temp_vars.append(var)
+        elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
@@ -1021,6 +1184,11 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
+    # If we found any temperature variables, we will only use those
+    if b_temp_flag:
+        var_list_final = ls_temp_vars
+        unit_choice = 'Degrees'
+        agg_func = 'mean'
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -1469,6 +1637,38 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
 def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
                     stat_choice, c_default_units, s_comparison,
                     c_field_list, period_choice, li_wyt_selected):
+    """
+    Creates monthly pattern plot
+
+    Parameters
+    ----------
+    df_all: DataFrame
+        Data to be filtered and plotted
+    var_list: list
+        Fields we want to plot
+    scenario_list: list
+        Scenarios we want to plot
+    unit_choice: str
+        Unit selection (CFS or TAF)
+    stat_choice: str
+        Statistic to calculate
+    c_default_units: dict
+        Dictionary of default units for each field
+    s_comparison: str
+        Name of comparison scenario
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    li_wyt_selected: list
+        Water year types selected for WYT time period
+    period_choice: int or str
+        Time period selected
+    li_wyt_selected
+
+    Returns
+    -------
+    Panel Object
+            Plot and table of data as a column
+    """
     df_all_plot = df_all.copy(deep=True)
     df_all_plot.reset_index(inplace=True, drop=True)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1501,6 +1701,9 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
+    b_temp_flag = False
+    ls_temp_vars = []
+
     # Unit conversion
     for var in var_list:
         try:
@@ -1508,7 +1711,11 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
         except:
             original_unit = None
 
-        if original_unit not in ['CFS', 'TAF']:
+        # if we have any temperature vars, keep them
+        if original_unit == 'TEMP':
+            b_temp_flag = True
+            ls_temp_vars.append(var)
+        elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
         elif original_unit == unit_choice:
@@ -1519,7 +1726,10 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
         elif original_unit == 'TAF':
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
-
+    # If we found any temperature variables, we will only use those
+    if b_temp_flag:
+        var_list_final = ls_temp_vars
+        unit_choice = 'Degrees'
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 

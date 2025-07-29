@@ -8,10 +8,16 @@ import pickle
 from multiprocessing import Pool
 from os import path
 
-# num_fixed = # of columns that are the same in all cases
-num_fixed = 7
 
 def get_trend_fields():
+    """
+    Gets the fields from TR_fields.txt
+
+    Returns
+    -------
+    c_tr_fields: dict
+        Dictionary of fields and descriptions
+    """
     # dictionary to hold fields and description in the form {field: description}
     c_tr_fields = {}
     try:
@@ -40,7 +46,26 @@ def get_trend_fields():
             c_tr_fields.pop(field)
     return c_tr_fields
 
+
 def pickler(append_list, baseline_stack, c_default_units, c_field_list):
+    """
+    Creates pickle files of DSS data
+
+    Parameters
+    ----------
+    append_list: list
+        List of dataframes of DSS data
+    baseline_stack: list
+        List of baseline scenario multiple times
+    c_default_units: dict
+        Dictionary of default units for each field
+    c_field_list: dict
+        Dictionary of fields and descriptions
+
+    Returns
+    -------
+    none
+    """
     df_all_data = pd.DataFrame()
     df_all_data = pd.concat(append_list)
     df_all_data.reset_index(drop=True, inplace=True)
@@ -51,6 +76,10 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list):
     df_baseline_stack.index.name = "Index"
 
     # Calc diffs for the alts vs baseline
+
+    # num_fixed = # of columns that are the same in all cases
+    num_fixed = 7
+
     # columns that shouldn't be subtracted
     li_wyt_cols = [index+num_fixed for index, colname in enumerate(df_all_data.iloc[:, num_fixed:]) if c_default_units[colname] == 'NONE']
     li_fixed_cols_indices = list(range(0, num_fixed)) + li_wyt_cols
@@ -81,7 +110,27 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list):
     pickle.dump(c_field_list, pickled_fields)
     pickled_fields.close()
 
+
 def load_pickles(ls_files):
+    """
+    Reads in pickle files
+
+    Parameters
+    ----------
+    ls_files: list
+        List of pickled files, can be empty
+
+    Returns
+    -------
+    df_all_data: DataFrame
+        All of the DSS file data
+    df_diffs: DataFrame
+        Differences data
+    c_default_units: dict
+        Dictionary of default units for each field
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    """
     if not ls_files:
         ls_files = ['values.pkl', 'diffs.pkl', 'units.pkl', 'fields.pkl']
     s_values_path = ''
@@ -129,9 +178,28 @@ def load_pickles(ls_files):
     return (df_all_data, df_diffs, c_default_units, c_field_list)
 
 
-
-
 def single_file_pull(dss_file, c_target_ts_list, scenario_name):
+    """
+    Reads in a single DSS file
+
+    Parameters
+    ----------
+    dss_file: str
+        Path to DSS file
+    c_target_ts_list: dict
+        Dictionary of fields to pull
+    scenario_name: str
+        Name for this scenario
+
+    Returns
+    -------
+    df_ts: DataFrame
+        Timeseries data that was pulled
+    c_target_ts_list_final: dict
+        Dictionary with the fields that were actually pulled
+    c_default_units: dict
+        Dictionary of default units for each field
+    """
     startDate = "31OCT1921 00:00:00"
     endDate = "30SEP2021 00:00:00"
     startDate_1 = datetime.date(1921, 10, 31)
@@ -236,18 +304,29 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name):
 
     return df_ts, c_target_ts_list_final, c_default_units
 
+
 def file_reader(runs: list[list], c_field_list, s_comparison):
     """
     reads in the list of runs. can be multiproccessing or not by changing multiprocess to True.
     Parameters
-        runs: list of runs and run names in the form [["Description_1", ("File_1.dss")], ...]
-        c_field_list: dictionary of fields and descriptions {field: description, ...}
-        s_comparison: string, name of the comparison scenario
-    returns
-        append_list: list of the dataframes of each run
-        baseline_stack: a list of dataframes of the comparison scenerio as many times as there are runs
-        c_default_units: dictionary of the default units for each field
-        c_field_list_final: dictionary of the final version of c_field_list
+    ----------
+    runs: list
+        list of runs and run names in the form [["Description_1", ("File_1.dss")], ...]
+    c_field_list: dict
+        dictionary of fields and descriptions {field: description, ...}
+    s_comparison: str
+        name of the comparison scenario
+
+    Returns
+    -------
+    append_list: list
+        list of the dataframes of each run
+    baseline_stack:
+        a list of dataframes of the comparison scenerio as many times as there are runs
+    c_default_units: dict
+        dictionary of the default units for each field
+    c_field_list_final: dict
+        dictionary of the final version of c_field_list
 
     """
     results = {}
@@ -315,6 +394,27 @@ def file_reader(runs: list[list], c_field_list, s_comparison):
 
 
 def calculated_fields(df_all, c_field_list, c_default_units):
+    """
+    Calculates calculated fields
+
+    Parameters
+    ----------
+    df_all: DataFrame
+        Data to calculate fields from
+    c_field_list: dict
+        Dictionary of fields and descriptions
+    c_default_units: dict
+            Dictionary of default units for each field
+
+    Returns
+    -------
+    df_all: DataFrame
+        Data including calculated fields
+    c_field_list: dict
+        Dictionary of fields and descriptions with calculated fields
+    c_default_units: dict
+            Dictionary of default units for each field with calculated fields
+    """
     # dictionary of what fields each calculated field needs
     c_fields_for_calculated = {
         'Total System Storage SWP and CVP': ['S_TRNTY', 'S_SHSTA', 'S_OROVL', 'S_FOLSM', 'S_SLUIS_CVP', 'S_SLUIS_SWP'],
