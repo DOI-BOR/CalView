@@ -1,9 +1,9 @@
 import panel as pn
 import os
 import pandas as pd
-from cs3_plotlib import *
+from src.cs3_plotlib import *
 from functools import partial
-from csdss_readlib_fullfile import *
+from src.csdss_readlib_fullfile import *
 
 
 ## Functions that should work for any version of the visualizer
