@@ -2,17 +2,17 @@
 import sys ; sys.setrecursionlimit(sys.getrecursionlimit() * 5)
 
 a = Analysis(
-    ['cs3_viz_app_main.py'],
+    ['calview_calsim.py'],
     pathex=[],
     binaries=[],
-    datas=[('TR_fields.txt', '.'), ('usbr_logo.jpg', '.')],
+    datas=[('inputs/TR_fields.txt', 'inputs/.'), ('inputs/usbr_logo.jpg', 'inputs/.')],
     hiddenimports=[],
-    hookspath=['.'],
+    hookspath=['src/hook-panel.py'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
+
 )
 pyz = PYZ(a.pure)
 
