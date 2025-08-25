@@ -67,10 +67,9 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     b_no_unit_flag = False
     s_no_unit_var = ''
 
-    b_temp_flag = False
-    ls_temp_vars = []
-    b_x2_flag = False
-    ls_x2_pos = []
+    b_alt_unit = False
+    ls_alt_vars = []
+    s_alt_unit = ''
 
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
@@ -81,15 +80,16 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
         except:
             original_unit = None
 
-        # if we have any temperature vars, keep them
-        if 'X2_PRV' in var:
-            b_x2_flag = True
-            ls_x2_pos.append(var)
-        # if we have any temperature vars, keep them
-        elif original_unit == 'DEGF':
-            b_temp_flag = True
-            ls_temp_vars.append(var)
-        elif original_unit not in ['CFS', 'TAF']:
+        # check for variables that are not cfs/taf like EC, temperature, X2 position
+        if original_unit not in ['NONE', 'CFS', 'TAF']:
+            # if we havent already declared what the unit we will keep track of is, declare it
+            if s_alt_unit == '':
+                s_alt_unit = original_unit
+            if original_unit == s_alt_unit:
+                b_alt_unit = True
+                ls_alt_vars.append(var)
+
+        elif original_unit == 'NONE':
             # if we have more than one variable with no units selected we are not going to use it
             if b_no_unit_flag:
                 if b_diffs_flag:
@@ -99,6 +99,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                 continue
             b_no_unit_flag = True
             s_no_unit_var = var
+            ls_alt_vars.append(var)
             pass
         elif original_unit == unit_choice:
             pass
@@ -109,13 +110,10 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
 
-    # If we found any temperature or x2 variables, we will only use those
-    if b_temp_flag:
-        var_list_final = ls_temp_vars
-        unit_choice = 'Degrees Fahrenheit'
-    elif b_x2_flag:
-        var_list_final = ls_x2_pos
-        unit_choice = 'KM'
+    # If we found any non cfs/taf variables, we will only use those
+    if b_alt_unit:
+        var_list_final = ls_alt_vars
+        unit_choice = 'Degrees Fahrenheit' if s_alt_unit == 'DEGF' else s_alt_unit
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -311,10 +309,9 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
     taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
-    b_temp_flag = False
-    ls_temp_vars = []
-    b_x2_flag = False
-    ls_x2_pos = []
+    b_alt_unit = False
+    ls_alt_vars = []
+    s_alt_unit = ''
 
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
@@ -324,13 +321,14 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             original_unit = c_default_units[var].strip().upper()
         except:
             original_unit = 'NONE'
-        if 'X2_PRV' in var:
-            b_x2_flag = True
-            ls_x2_pos.append(var)
-        # if we have any temperature vars, keep them
-        elif original_unit == 'DEGF':
-            b_temp_flag = True
-            ls_temp_vars.append(var)
+        # check for variables that are not cfs/taf like EC, temperature, X2 position
+        if original_unit not in ['NONE', 'CFS', 'TAF']:
+            # if we havent already declared what the unit we will keep track of is, declare it
+            if s_alt_unit == '':
+                s_alt_unit = original_unit
+            if original_unit == s_alt_unit:
+                b_alt_unit = True
+                ls_alt_vars.append(var)
         elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
@@ -343,15 +341,13 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
-    # If we found any temperature or x2 variables, we will only use those
-    if b_temp_flag:
-        var_list_final = ls_temp_vars
-        unit_choice = 'Degrees Fahrenheit'
+
+    # If we found any non cfs/taf variables, we will only use those
+    if b_alt_unit:
+        var_list_final = ls_alt_vars
+        unit_choice = 'Degrees Fahrenheit' if s_alt_unit == 'DEGF' else s_alt_unit
         agg_func = 'mean'
-    elif b_x2_flag:
-        var_list_final = ls_x2_pos
-        unit_choice = 'KM'
-        agg_func = 'mean'
+
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -708,10 +704,9 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
-    b_temp_flag = False
-    ls_temp_vars = []
-    b_x2_flag = False
-    ls_x2_pos = []
+    b_alt_unit = False
+    ls_alt_vars = []
+    s_alt_unit = ''
 
     # Unit conversion
     for var in var_list:
@@ -719,13 +714,14 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             original_unit = c_default_units[var].strip().upper()
         except:
             original_unit = None
-        if 'X2_PRV' in var:
-            b_x2_flag = True
-            ls_x2_pos.append(var)
-        # if we have any temperature vars, keep them
-        elif original_unit == 'DEGF':
-            b_temp_flag = True
-            ls_temp_vars.append(var)
+        # check for variables that are not cfs/taf like EC, temperature, X2 position
+        if original_unit not in ['NONE', 'CFS', 'TAF']:
+            # if we havent already declared what the unit we will keep track of is, declare it
+            if s_alt_unit == '':
+                s_alt_unit = original_unit
+            if original_unit == s_alt_unit:
+                b_alt_unit = True
+                ls_alt_vars.append(var)
         elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
@@ -738,15 +734,13 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
-    # If we found any temperature variables, we will only use those
-    if b_temp_flag:
-        var_list_final = ls_temp_vars
-        unit_choice = 'Degrees Fahrenheit'
+
+    # If we found any non cfs/taf variables, we will only use those
+    if b_alt_unit:
+        var_list_final = ls_alt_vars
+        unit_choice = 'Degrees Fahrenheit' if s_alt_unit == 'DEGF' else s_alt_unit
         agg_func = 'mean'
-    elif b_x2_flag:
-        var_list_final = ls_x2_pos
-        unit_choice = 'KM'
-        agg_func = 'mean'
+
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -1200,10 +1194,9 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
-    b_temp_flag = False
-    ls_temp_vars = []
-    b_x2_flag = False
-    ls_x2_pos = []
+    b_alt_unit = False
+    ls_alt_vars = []
+    s_alt_unit = ''
 
     # Unit conversion
     for var in var_list:
@@ -1211,13 +1204,14 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             original_unit = c_default_units[var].strip().upper()
         except:
             original_unit = None
-        if 'X2_PRV' in var:
-            b_x2_flag = True
-            ls_x2_pos.append(var)
-        # if we have any temperature vars, keep them
-        elif original_unit == 'DEGF':
-            b_temp_flag = True
-            ls_temp_vars.append(var)
+        # check for variables that are not cfs/taf like EC, temperature, X2 position
+        if original_unit not in ['NONE', 'CFS', 'TAF']:
+            # if we havent already declared what the unit we will keep track of is, declare it
+            if s_alt_unit == '':
+                s_alt_unit = original_unit
+            if original_unit == s_alt_unit:
+                b_alt_unit = True
+                ls_alt_vars.append(var)
         elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
@@ -1230,15 +1224,13 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
     agg_func = 'sum' if unit_choice == 'TAF' else 'mean'
-    # If we found any temperature variables, we will only use those
-    if b_temp_flag:
-        var_list_final = ls_temp_vars
-        unit_choice = 'Degrees Fahrenheit'
+
+    # If we found any non cfs/taf variables, we will only use those
+    if b_alt_unit:
+        var_list_final = ls_alt_vars
+        unit_choice = 'Degrees Fahrenheit' if s_alt_unit == 'DEGF' else s_alt_unit
         agg_func = 'mean'
-    elif b_x2_flag:
-        var_list_final = ls_x2_pos
-        unit_choice = 'KM'
-        agg_func = 'mean'
+
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 
@@ -1755,10 +1747,9 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     # create copy of var list since lists are mutable
     var_list_final = var_list[:]
 
-    b_temp_flag = False
-    ls_temp_vars = []
-    b_x2_flag = False
-    ls_x2_pos = []
+    b_alt_unit = False
+    ls_alt_vars = []
+    s_alt_unit = ''
 
     # Unit conversion
     for var in var_list:
@@ -1767,13 +1758,14 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
         except:
             original_unit = None
 
-        if 'X2_PRV' in var:
-            b_x2_flag = True
-            ls_x2_pos.append(var)
-        # if we have any temperature vars, keep them
-        elif original_unit == 'DEGF':
-            b_temp_flag = True
-            ls_temp_vars.append(var)
+        # check for variables that are not cfs/taf like EC, temperature, X2 position
+        if original_unit not in ['NONE', 'CFS', 'TAF']:
+            # if we havent already declared what the unit we will keep track of is, declare it
+            if s_alt_unit == '':
+                s_alt_unit = original_unit
+            if original_unit == s_alt_unit:
+                b_alt_unit = True
+                ls_alt_vars.append(var)
         elif original_unit not in ['CFS', 'TAF']:
             var_list_final.remove(var)
             pass
@@ -1785,14 +1777,12 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
         elif original_unit == 'TAF':
             df_all_plot[var] = \
                 np.multiply(df_all_plot[var], taf_cfs)
-    # If we found any temperature variables, we will only use those
-    if b_temp_flag:
-        var_list_final = ls_temp_vars
-        unit_choice = 'Degrees Fahrenheit'
-    elif b_x2_flag:
-        var_list_final = ls_x2_pos
-        unit_choice = 'KM'
-        agg_func = 'mean'
+
+    # If we found any non cfs/taf variables, we will only use those
+    if b_alt_unit:
+        var_list_final = ls_alt_vars
+        unit_choice = 'Degrees Fahrenheit' if s_alt_unit == 'DEGF' else s_alt_unit
+
     if len(var_list_final) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
 

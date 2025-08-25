@@ -256,7 +256,10 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_flag):
                 target_pathName = f'/{b_part}//{e_part}/{f_part}/'
 
             elif s_flag == 'salinity':
-                warnings.warn("Salinity not implimented yet")
+                f_part = dfPaths[dfPaths[['A', 'B', 'C']].agg('/'.join, axis=1) == b_part]['F'].iloc[0]
+                e_part = '1MON'
+                target_pathName = f'/{b_part}//{e_part}/{f_part}/'
+
 
             # pull current path
             working_ts = fid.read_ts(target_pathName, trim_missing=True)
@@ -317,7 +320,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_flag):
         c_hec5q_fields = {field: c_field_list[field] for field in c_field_list if field not in c_calsim_fields}
         c_field_list_final = {}
     elif s_flag == 'salinity':
-        warnings.warn("Salinity not yet implemented.")
+        c_field_list_final = c_field_list.copy()
 
     multiprocess = False
 
@@ -471,7 +474,38 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_flag):
 
                 results[run[0]] = df_all_data
             elif s_flag == 'salinity':
-                warnings.warn("Salinity not implemented yet")
+                df_flow_result, c_flow_target_ts_list, c_flow_default_units = single_file_pull(run[1]['flow'], c_field_list, run[0], s_flag)
+                df_ec_result, c_ec_target_ts_list, c_ec_default_units = single_file_pull(run[1]['ec'], c_field_list, run[0], s_flag)
+
+                # Combine the data from all the DSS files
+                # Keep everything from one data frame but other fields from the rest, so we only have one copy of dat/Year/Month/etc.
+                df_all_data = pd.concat([df_flow_result, df_ec_result], axis=1, join='outer')
+
+                # Add in the columns not pulled from the DSS file
+                # Calender year, month, water year, contract year
+                df_all_data.insert(0, 'JanDecYear', df_all_data.index.year)
+                df_all_data.insert(0, 'Month', df_all_data.index.month)
+                df_all_data.insert(0, 'Year', df_all_data.index.year)
+                df_all_data.insert(0, 'MarFebYear', np.where(df_all_data['Month'] >= 3, df_all_data['Year'], df_all_data['Year'] - 1))
+                df_all_data.insert(0, 'OctSeptYear', np.where(df_all_data['Month'] <= 9, df_all_data['Year'], df_all_data['Year'] + 1))
+
+                # add scenario name
+                df_all_data.insert(0, 'Scenario', run[0])
+
+                # make date a column
+                df_all_data['Date'] = df_all_data.index
+                date_temp = df_all_data.pop('Date')
+                df_all_data.insert(0, 'Date', date_temp)
+
+                # combine all field lists together
+                c_field_list_curr = c_flow_target_ts_list | c_ec_target_ts_list
+                c_field_list_final.update(c_field_list_curr)
+
+                # add units into dictionary to store
+                c_default_units_all.update(c_flow_default_units)
+                c_default_units_all.update(c_ec_default_units)
+
+                results[run[0]] = df_all_data
     # else:
     #     # create pool
     #     pool = Pool()
@@ -494,7 +528,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_flag):
     #     pool.join()
 
     # since the set up of the temperature version allowed for fields to be in one run but not another, we need to remove any that are like this
-    if s_flag == 'temperature':
+    if s_flag == 'temperature' or s_flag == 'salinity':
 
         # count the number of times each column is used
         ls_all_fields = np.concatenate([df.columns for df in results.values()], axis=None)
@@ -538,7 +572,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_flag):
         elif s_flag == 'temperature':
             c_default_units_all[run_name] = file_name
         elif s_flag == 'salinity':
-            warnings.warn("Salinity not implemented")
+            c_default_units_all[run_name] = file_name
 
     return append_list, baseline_stack, c_default_units_all, c_field_list_final
 
@@ -591,6 +625,9 @@ def calculated_fields(df_all, c_field_list, c_default_units):
                                        'Stor-Temp/Stor-Temp/Storage.lt.99.00F SR', 'Stor-Temp/Stor-Temp/Storage.lt.45.00F AR', 'Stor-Temp/Stor-Temp/Storage.lt.50.00F AR',
                                        'Stor-Temp/Stor-Temp/Storage.lt.55.00F AR', 'Stor-Temp/Stor-Temp/Storage.lt.60.00F AR', 'Stor-Temp/Stor-Temp/Storage.lt.65.00F AR',
                                        'Stor-Temp/Stor-Temp/Storage.lt.70.00F AR', 'Stor-Temp/Stor-Temp/Storage.lt.99.00F AR'],
+        'SWP/CVP South Delta Pumping Flow (Total Export)': ['HYDROV8.2.2/CLIFTON_COURT/FLOW-MEAN', 'HYDROV8.2.2/CHDMC006/FLOW-MEAN'],
+        'Combined Old and Middle River (OMR) Flow': ['HYDROV8.2.2/ROLD024/FLOW-MEAN', 'HYDROV8.2.2/RMID015_144/FLOW-MEAN', 'HYDROV8.2.2/RMID015_145/FLOW-MEAN'],
+        'Old River at Rock Slough Chloride': ['QUALV8.2.2/ROLD024/EC-MEAN']
     }
 
     # loop through the calculate fields and try anf add them
@@ -700,6 +737,13 @@ def calculated_fields(df_all, c_field_list, c_default_units):
 
                     # drop from the dataframe as well
                     df_all.drop(sl_needed_fields, axis=1, inplace=True)
+                case 'SWP/CVP South Delta Pumping Flow (Total Export)':
+                    df_all[calculated_field] = df_all['HYDROV8.2.2/CLIFTON_COURT/FLOW-MEAN'] - df_all['HYDROV8.2.2/CHDMC006/FLOW-MEAN']
+                case 'Combined Old and Middle River (OMR) Flow':
+                    df_all[calculated_field] = df_all['HYDROV8.2.2/RMID015_144/FLOW-MEAN'] - df_all['HYDROV8.2.2/RMID015_145/FLOW-MEAN'] + df_all['HYDROV8.2.2/ROLD024/FLOW-MEAN']
+                case 'Old River at Rock Slough Chloride':
+                    df_all[calculated_field] = np.maximum(0.285 * df_all['QUALV8.2.2/ROLD024/EC-MEAN'] - 50, 0.15 * df_all['QUALV8.2.2/ROLD024/EC-MEAN'] - 12)
+                    c_default_units_curr[calculated_field] = 'MG/L'
                 case _:
                     pass
     return df_all, c_field_list_curr, c_default_units_curr

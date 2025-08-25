@@ -159,6 +159,15 @@ def update_dss_file_widget(event, file_picker_column, file_picker_col_tracker):
                 max_width=1000,
                 root_directory=os.path.abspath(os.sep)
             )
+        elif event.new == "New salinity outputs":
+            o_instructions = pn.pane.Markdown("### Select the folders to be read in.")
+            o_instructions_tooltip = pn.widgets.TooltipIcon(value="Move all folders from 'File Browser' section to 'Selected files' section then click 'Continue'")
+            dss_file = pn.widgets.FileSelector(
+                name='',
+                only_files=False,
+                max_width=1000,
+                root_directory=os.path.abspath(os.sep)
+            )
         # Pickle files
         else:
             o_instructions = pn.pane.Markdown('### <span style="color:red">Select the pickle files previously created (diffs.pkl, units.pkl, values.pkl, and fields.pkl)</span>')
@@ -387,7 +396,11 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_flag):
         df_run_names.rename(columns={'calsim_DV': 'CalSim DV File','calsim_SV': 'CalSim SV File', 'AR_WQ_Report': 'American River Output',
                                      'a_CALSIMII_HEC5Q': 'American River Input', 'SR_WQ_Report': 'Sacramento River Output', 's_CALSIMII_HEC5Q': 'Sacramento River Input'}, inplace=True)
     elif s_flag == 'salinity':
-        warnings.warn('Salinity not implimented yet')
+        # dictionary of files for each run
+        run_names = {scen: c_default_units[scen] for scen in scenario_names}
+        df_run_names = pd.DataFrame.from_dict(run_names, orient='index')
+        df_run_names.index.name = 'Scenario Name'
+        df_run_names.rename(columns={'flow': 'Flow File', 'ec': 'EC File'}, inplace=True)
 
     # Title for file names
     o_scen_names_title = pn.pane.Markdown("# Files and names")
@@ -431,7 +444,10 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_flag):
         '55-60 (Folsom)': 'Storage.lt.60.00F (American River) - Storage.lt.55.00F (American River)',
         '60-65 (Folsom)': 'Storage.lt.65.00F (American River) - Storage.lt.60.00F (American River)',
         '65-70 (Folsom)': 'Storage.lt.70.00F (American River) - Storage.lt.65.00F (American River)',
-        '70+ (Folsom)': 'Storage.lt.99.00F (American River) - Storage.lt.70.00F (American River)'
+        '70+ (Folsom)': 'Storage.lt.99.00F (American River) - Storage.lt.70.00F (American River)',
+        'SWP/CVP South Delta Pumping Flow (Total Export)': 'HYDROV8.2.2/CLIFTON_COURT/FLOW-MEAN - HYDROV8.2.2/CHDMC006/FLOW-MEAN',
+        'Combined Old and Middle River (OMR) Flow': 'HYDROV8.2.2/RMID015_144/FLOW-MEAN - HYDROV8.2.2/RMID015_145/FLOW-MEAN + HYDROV8.2.2/ROLD024/FLOW-MEAN',
+        'Old River at Rock Slough Chloride': 'MAX(0.285 * QUALV8.2.2/ROLD024/EC-MEAN - 50, 0.15 * QUALV8.2.2/ROLD024/EC-MEAN - 12)'
     }
 
     # Calculated field formulas
@@ -680,11 +696,7 @@ def create_plots(scenario_names, c_field_list, df_all_data, c_default_units, df_
             i_year=o_year_selector
         )
 
-    elif s_flag == 'salinity':
-        warnings.warn("Salinity not implemented yet")
-
-
-    # Titles for each plot, same order as the plots
+       # Titles for each plot, same order as the plots
     ts_title = pn.pane.Markdown("# Timeseries Plot"
                                 )
 
@@ -752,8 +764,6 @@ def create_plots(scenario_names, c_field_list, df_all_data, c_default_units, df_
 
     if s_flag == 'temperature':
         one_year_plots = pn.Column()
-    elif s_flag == 'salinity':
-        warnings.warn("Salinity not implemented yet")
 
     # Add everything into these containers
     single_var_widgets = pn.Row(bar_stat_sel)
@@ -776,11 +786,9 @@ def create_plots(scenario_names, c_field_list, df_all_data, c_default_units, df_
     if s_flag == 'temperature':
         one_year_plots.append(pn.Row(o_year_selector, o_reservoir_toggle))
         one_year_plots.append(bound_one_year_plots)
-    elif s_flag == 'salinity':
-        warnings.warn("Salinity not implemented yet")
 
     # create the tabs with each page of plots
-    if s_flag == 'calsim':
+    if s_flag == 'calsim' or s_flag == 'salinity':
         tabs = pn.Tabs(
             ('Bar Plot', single_var_plots),
             ('Timeseries', timeseries_plots),
@@ -799,8 +807,6 @@ def create_plots(scenario_names, c_field_list, df_all_data, c_default_units, df_
             ('Monthly Pattern', monthly_plots),
             ('Metadata', o_metadata)
         )
-    elif s_flag == 'salinity':
-        warnings.warn("Salinity not implemented yet")
 
     # append the tabs to the row
     tabs_row.append(tabs)
@@ -940,21 +946,41 @@ def add_run_names_widget(event, file_picker_col_tracker, run_name_col_tracker, f
         # add option to override TR_fields.txt
         override_TR_fields_instructions = pn.pane.Markdown("""
         # OPTIONAL override default fields:""", renderer='markdown')
-        override_TR_fields_instructions_deatils = pn.pane.Markdown("""
+        if s_flag == 'calsim':
+            # if calsim, only need the b part for the fields
+            override_TR_fields_instructions_deatils = pn.pane.Markdown("""
+    
+            ## If you would like to override the built in default fields, select a text file with your preferred fields.
+    
+            ### Each line must be a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
+    
+            ### Example:
+    
+            > S_FOLSM Folsom Storage
+            >
+            > S_SHSTA Shasta Storage
+            >
+            > ...
+            """, renderer='markdown')
+            override_TR_fields_instructions_tooltip = pn.widgets.TooltipIcon(
+                value='A default list of fields and descriptions is built in. If you want to override this list, upload a new list here. If no file is selected, the built-in list is used.')
 
-        ## If you would like to override the built in default fields, select a text file with your preferred fields.
+        elif s_flag == 'temperature' or s_flag == 'salinity':
+            override_TR_fields_instructions_deatils = pn.pane.Markdown("""
 
-        ### Each line must be a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
+                        ## If you would like to override the built in default fields, select a text file with your preferred fields.
 
-        ### Example:
+                        ### Each line must be a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
 
-        > S_FOLSM Folsom Storage
-        >
-        > S_SHSTA Shasta Storage
-        >
-        > ...
-        """, renderer='markdown')
-        override_TR_fields_instructions_tooltip = pn.widgets.TooltipIcon(value='A default list of fields and descriptions is built in. If you want to override this list, upload a new list here. If no file is selected, the built-in list is used.')
+                        ### Example:
+
+                        > Stor-Temp/FOLSOM/STORAGE	Folsom Storage
+                        >
+                        > AMERICAN/BLW FOLSOM DAM/FLOW	American River below Folsom Dam Flow
+                        >
+                        > ...
+                        """, renderer='markdown')
+            override_TR_fields_instructions_tooltip = pn.widgets.TooltipIcon(value='A default list of fields and descriptions is built in. If you want to override this list, upload a new list here. Specify the A, B, and C parts of the DSS path. If no file is selected, the built-in list is used.')
         field_column.append(pn.Column(pn.Row(override_TR_fields_instructions, override_TR_fields_instructions_tooltip), override_TR_fields_instructions_deatils))
         field_col_tracker.append("override_instructions")
 
@@ -966,26 +992,50 @@ def add_run_names_widget(event, file_picker_col_tracker, run_name_col_tracker, f
         #Also add optional field add text box
         add_field_instructions = pn.pane.Markdown("""
         # OPTIONAL additional fields: """, renderer='markdown')
-        add_field_instructions_details = pn.pane.Markdown("""
+        if s_flag == 'calsim':
+            # if calsim, only need the b part for the fields
+            add_field_instructions_details = pn.pane.Markdown("""
+    
+            ## Add additional fields to visualize that are not present in the default list (or your chosen list). 
+    
+            ### Each line is a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
+    
+            ### Example:
+    
+            > S_FOLSM Folsom Storage
+            >
+            > S_SHSTA Shasta Storage
+            >
+            >...
+    
+            """, renderer='markdown')
+            add_field_instructions_tooltip = pn.widgets.TooltipIcon(value='If you want to include fields that are not in the default list, add them here. If left blank, only the default list will be pulled from files.')
+        elif s_flag == 'temperature' or s_flag == 'salinity':
+            add_field_instructions_details = pn.pane.Markdown("""
 
-        ## Add additional fields to visualize that are not present in the default list (or your chosen list). 
+            ## Add additional fields to visualize that are not present in the default list (or your chosen list). 
 
-        ### Each line is a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
+            ### Each line is a field with the variable name followed by a space or tab followed by the description of the variable. This is the default format if copied and pasted from an excel sheet.
 
-        ### Example:
+            ### Example:
 
-        > S_FOLSM Folsom Storage
-        >
-        > S_SHSTA Shasta Storage
-        >
-        >...
+            > Stor-Temp/FOLSOM/STORAGE	Folsom Storage
+            >
+            > AMERICAN/BLW FOLSOM DAM/FLOW	American River below Folsom Dam Flow
+            >
+            >...
 
-        """, renderer='markdown')
-        add_field_instructions_tooltip = pn.widgets.TooltipIcon(value='If you want to include fields that are not in the default list, add them here. If left blank, only the default list will be pulled from files.')
+            """, renderer='markdown')
+            add_field_instructions_tooltip = pn.widgets.TooltipIcon(
+                value='If you want to include fields that are not in the default list, add them here. Specify the A, B, and C parts of the DSS path. If left blank, only the default list will be pulled from files.')
+
         field_column.append(pn.Column(pn.Row(add_field_instructions, add_field_instructions_tooltip), add_field_instructions_details))
         field_col_tracker.append("add_field_instructions")
 
-        add_field_text = pn.widgets.TextAreaInput(name='', placeholder='S_FOLSM\tFolsom Storage\nS_SHSTA\tShasta Storage', auto_grow=True, width=500)
+        if s_flag == 'calsim':
+            add_field_text = pn.widgets.TextAreaInput(name='', placeholder='S_FOLSM\tFolsom Storage\nS_SHSTA\tShasta Storage', auto_grow=True, width=500)
+        elif s_flag == 'temperature' or s_flag == 'salinity':
+            add_field_text = pn.widgets.TextAreaInput(name='', placeholder='Stor-Temp/FOLSOM/STORAGE\tFolsom Storage\nAMERICAN/BLW FOLSOM DAM/FLOW\tAmerican River below Folsom Dam Flow', auto_grow=True, width=500)
 
         field_column.append(add_field_text)
         field_col_tracker.append("add_field_text")
@@ -1086,7 +1136,10 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
 
         # Get default fields and any added ones
         # pulling from TR_fields_temperature.txt
-        c_tr_fields = get_trend_fields('TR_fields_temperature.txt')
+        if s_flag == 'temperature':
+            c_tr_fields = get_trend_fields('TR_fields_temperature.txt')
+        elif s_flag == 'salinity':
+            c_tr_fields = get_trend_fields('TR_fields_salinity.txt')
 
         # get the overridden fields
         override_TR_fields = field_column[field_col_tracker.index("override_file")].value
@@ -1149,28 +1202,40 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
             if comparison_indices[file_index]:
                 # define comparison name variable
                 s_comparison = run_name_column[run_index][0].value
+            if s_flag == "temperature":
+                c_dss_paths = {'calsim_DV': '',
+                               'calsim_SV': '',
+                               'AR_WQ_Report': '',
+                               'a_CALSIMII_HEC5Q': '',
+                               'SR_WQ_Report': '',
+                               's_CALSIMII_HEC5Q': ''
+                               }
+                for s_file in os.listdir(files[file_index]):
+                    s_curr_path = os.path.join(folders[file_index], s_file)
+                    if os.path.isfile(s_curr_path):
+                        if 'SV' in s_file or 'sv' in s_file:
+                            c_dss_paths['calsim_SV'] = s_curr_path
+                        elif 'DV' in s_file or 'dv' in s_file:
+                            c_dss_paths['calsim_DV'] = s_curr_path
+                    elif s_file == 'american':
+                        c_dss_paths['AR_WQ_Report'] = os.path.join(s_curr_path, 'AR_WQ_Report.dss')
+                        c_dss_paths['a_CALSIMII_HEC5Q'] = os.path.join(s_curr_path,  'CALSIMII_HEC5Q.dss')
+                    elif s_file == 'sacramento':
+                        c_dss_paths['SR_WQ_Report'] = os.path.join(s_curr_path, 'SR_WQ_Report.dss')
+                        c_dss_paths['s_CALSIMII_HEC5Q'] = os.path.join(s_curr_path, 'CALSIMII_HEC5Q.dss')
+            elif s_flag == "salinity":
+                c_dss_paths = {
+                    "flow": '',
+                    "ec": ''
+                }
+                for s_file in os.listdir(files[file_index]):
+                    s_curr_path = os.path.join(folders[file_index], s_file)
+                    if os.path.isfile(s_curr_path):
+                        if 'EC' in s_file or 'ec' in s_file:
+                            c_dss_paths['ec'] = s_curr_path
+                        elif 'FLOW' in s_file or 'flow' in s_file:
+                            c_dss_paths['flow'] = s_curr_path
 
-            c_dss_paths = {'calsim_DV': '',
-                           'calsim_SV': '',
-                           'AR_WQ_Report': '',
-                           'a_CALSIMII_HEC5Q': '',
-                           'SR_WQ_Report': '',
-                           's_CALSIMII_HEC5Q': ''
-                           }
-            for s_file in os.listdir(files[file_index]):
-                s_curr_path = os.path.join(folders[file_index], s_file)
-                if os.path.isfile(s_curr_path):
-                    if 'SV' in s_file or 'sv' in s_file:
-                        c_dss_paths['calsim_SV'] = s_curr_path
-                    elif 'DV' in s_file or 'dv' in s_file:
-                        c_dss_paths['calsim_DV'] = s_curr_path
-                elif s_file == 'american':
-                    c_dss_paths['AR_WQ_Report'] = os.path.join(s_curr_path, 'AR_WQ_Report.dss')
-                    c_dss_paths['a_CALSIMII_HEC5Q'] = os.path.join(s_curr_path,  'CALSIMII_HEC5Q.dss')
-                elif s_file == 'sacramento':
-                    c_dss_paths['SR_WQ_Report'] = os.path.join(s_curr_path, 'SR_WQ_Report.dss')
-                    c_dss_paths['s_CALSIMII_HEC5Q'] = os.path.join(s_curr_path, 'CALSIMII_HEC5Q.dss')
-            sl_current_folder_contents = os.listdir(folders[file_index])
             runs.append([run_name_column[run_index][0].value, c_dss_paths])
         print(runs)
         append_list, baseline_stack, c_default_units, c_field_list = file_reader(runs, c_field_list, s_comparison, s_flag)
