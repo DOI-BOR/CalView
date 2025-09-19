@@ -1,0 +1,104 @@
+HYDROV8.2.2/RSAC155/FLOW-MEAN	Sacramento River at Freeport Flow
+HYDROV8.2.2/SUT_US_MIN/FLOW-MEAN	Sutter Slough Upstream of Miner Slough Flow
+HYDROV8.2.2/SUTR_SL/FLOW-MEAN	Sutter Slough at Head Flow
+HYDROV8.2.2/STMBT_SL/FLOW-MEAN	Steamboat Slough upstream of Sutter Confluence Flow
+HYDROV8.2.2/SLSBT011/FLOW-MEAN	Steamboat Slough downstream of Sutter Confluence Flow
+HYDROV8.2.2/CACHE_RYER/FLOW-MEAN	Cache Slough at Ryer Island Flow
+HYDROV8.2.2/SLCCH016/FLOW-MEAN	Cache Sl at Vallejo Intake Flow
+HYDROV8.2.2/SLBAR002/FLOW-MEAN	Barker Slough / North Bay Aqueduct Flow
+HYDROV8.2.2/SLCBN002/FLOW-MEAN	Chadbourne Sl at Sunrise Duck Club Flow
+HYDROV8.2.2/SAC_DS_SUTSL/FLOW-MEAN	Sacramento River downstream of Sutter Slough Flow
+HYDROV8.2.2/SAC_DS_STMBTSL/FLOW-MEAN	Sacramento River downstream of Steamboat Slough Flow
+HYDROV8.2.2/RSAC128/FLOW-MEAN	Sacramento River upstream of DCC Flow
+HYDROV8.2.2/DCC/FLOW-MEAN	Delta Cross Channel Flow
+HYDROV8.2.2/RSAC123/FLOW-MEAN	Sacramento River downstream of Georgiana Slough Flow
+HYDROV8.2.2/GEORG_SL/FLOW-MEAN	Georgiana Slough Flow
+HYDROV8.2.2/RSAC101/FLOW-MEAN	Sacramento River at Rio Vista Flow
+HYDROV8.2.2/SLTRM004/FLOW-MEAN	Threemile Slough Flow
+HYDROV8.2.2/RSMKL008/FLOW-MEAN	South Fork Mokelumne River at Staten Island (Terminous) Flow
+HYDROV8.2.2/RSAC092/FLOW-MEAN	Sacramento River at Emmaton Flow
+HYDROV8.2.2/RSAC081/FLOW-MEAN	Sacramento River at Collinsville Flow
+HYDROV8.2.2/SLSUS012/FLOW-MEAN	Suisun Sl near Volanti Intake   Flow
+HYDROV8.2.2/SLMZU011/FLOW-MEAN	Montezuma Slough at Beldon's Landing Flow
+HYDROV8.2.2/RSAC054/FLOW-MEAN	Sacramento River at Martinez Flow
+HYDROV8.2.2/RSAC064/FLOW-MEAN	Sacramento River at Port Chicago Flow
+HYDROV8.2.2/RSAC075/FLOW-MEAN	Sacramento River at Mallard Island (MAL) Flow
+HYDROV8.2.2/CHIPS_N_437/FLOW-MEAN	Chipps Island (North, Channel 437) Flow
+HYDROV8.2.2/CHIPS_S_442/FLOW-MEAN	Chipps Island (South, Channel 442) Flow
+HYDROV8.2.2/RSAN007/FLOW-MEAN	San Joaquin River at Antioch Flow
+HYDROV8.2.2/RSAN018/FLOW-MEAN	San Joaquin River at Jersey Point Flow
+HYDROV8.2.2/RSAN032/FLOW-MEAN	San Joaquin River at San Andreas Landing  Flow
+HYDROV8.2.2/RSAN037/FLOW-MEAN	San Joaquin River at Prisoners Point Flow
+HYDROV8.2.2/SJR_SAN_ANDREAS/FLOW-MEAN	San Joaquin River at San Andreas Flow
+HYDROV8.2.2/RSAN043/FLOW-MEAN	San Joaquin River at Venice Island  Flow
+HYDROV8.2.2/RSAN046/FLOW-MEAN	San Joaquin River between Turner & Columbia Cut Flow
+HYDROV8.2.2/COLUMBIA_CUT/FLOW-MEAN	Columbia Cut Flow
+HYDROV8.2.2/TRNR_CUT/FLOW-MEAN	Turner Cut Flow
+HYDROV8.2.2/RSAN058/FLOW-MEAN	San Joaquin River at Stockton Flow
+HYDROV8.2.2/RSAN072/FLOW-MEAN	San Joaquin River at Brandt Bridge Flow
+HYDROV8.2.2/RSAN112/FLOW-MEAN	San Joaquin River at Vernalis Flow
+HYDROV8.2.2/ROLD024/FLOW-MEAN	Old River at Rock Slough Flow
+HYDROV8.2.2/ROLD034/FLOW-MEAN	Old River at Hwy4 Flow
+HYDROV8.2.2/ROLD059/FLOW-MEAN	Old River at Tracy Road Flow
+HYDROV8.2.2/SJR_BUCKLEY_COVE/FLOW-MEAN	San Joaquin River at Buckley Cove Flow
+HYDROV8.2.2/ROLD074/FLOW-MEAN	Old River at Head Flow
+HYDROV8.2.2/RMID015_144/FLOW-MEAN	Middle River at Bacon Island (channel 144) Flow
+HYDROV8.2.2/RMID015_145/FLOW-MEAN	Middle River at Bacon Island (channel 145) Flow
+HYDROV8.2.2/CLIFTON_COURT/FLOW-MEAN	Clifton Court Forebay Flow
+HYDROV8.2.2/CHSWP003/FLOW-MEAN	Old River at Clifton Court Flow
+HYDROV8.2.2/CHDMC006/FLOW-MEAN	Delta Mendota Canal at Jones Pumping Plant Flow
+QUALV8.2.2/RSAC155/EC-MEAN	Sacramento River at Freeport EC
+QUALV8.2.2/RSAC139/EC-MEAN	Sacramento River at Greens Landing EC
+QUALV8.2.2/SUT_US_MIN/EC-MEAN	Sutter Slough Upstream of Miner Slough EC
+QUALV8.2.2/SUTR_SL/EC-MEAN	Sutter Slough at Head EC
+QUALV8.2.2/STMBT_SL/EC-MEAN	Steamboat Slough upstream of Sutter Confluence EC
+QUALV8.2.2/SLSBT011/EC-MEAN	Steamboat Slough downstream of Sutter Confluence EC
+QUALV8.2.2/CACHE_RYER/EC-MEAN	Cache Slough at Ryer Island EC
+QUALV8.2.2/SLCCH016/EC-MEAN	Cache Sl at Vallejo Intake EC
+QUALV8.2.2/SLBAR002/EC-MEAN	Barker Slough / North Bay Aqueduct EC
+QUALV8.2.2/SLCBN002/EC-MEAN	Chadborne Sl at Sunrise Duck Club EC
+QUALV8.2.2/SAC_DS_SUTSL/EC-MEAN	Sacramento River downstream of Sutter Slough EC
+QUALV8.2.2/SAC_DS_STMBTSL/EC-MEAN	Sacramento River downstream of Steamboat Slough EC
+QUALV8.2.2/RSAC128/EC-MEAN	Sacramento River upstream of DCC EC
+QUALV8.2.2/DCC/EC-MEAN	Delta Cross Channel EC
+QUALV8.2.2/RSAC123/EC-MEAN	Sacramento River downstream of Georgiana Slough EC
+QUALV8.2.2/GEORG_SL/EC-MEAN	Georgiana Slough EC
+QUALV8.2.2/RSAC101/EC-MEAN	Sacramento River at Rio Vista EC
+QUALV8.2.2/SLTRM004/EC-MEAN	Threemile Slough EC
+QUALV8.2.2/RSMKL008/EC-MEAN	South Fork Mokelumne River at Staten Island (Terminous) EC
+QUALV8.2.2/RSAC092/EC-MEAN	Sacramento River at Emmaton EC
+QUALV8.2.2/RSAC081/EC-MEAN	Sacramento River at Collinsville EC
+QUALV8.2.2/SLSUS012/EC-MEAN	Suisun Sl near Volanti Intake   EC
+QUALV8.2.2/SLMZU011/EC-MEAN	Montezuma Slough at Beldon's Landing EC
+QUALV8.2.2/RSAC054/EC-MEAN	Sacramento River at Martinez EC
+QUALV8.2.2/RSAC064/EC-MEAN	Sacramento River at Port Chicago EC
+QUALV8.2.2/RSAC075/EC-MEAN	Sacramento River at Mallard Island (MAL) EC
+QUALV8.2.2/CHIPS_N_437/EC-MEAN	Chipps Island (North, Channel 437) EC
+QUALV8.2.2/CHIPS_S_442/EC-MEAN	Chipps Island (South, Channel 442) EC
+QUALV8.2.2/RSAN007/EC-MEAN	San Joaquin River at Antioch EC
+QUALV8.2.2/RSAN018/EC-MEAN	San Joaquin River at Jersey Point EC
+QUALV8.2.2/RSAN032/EC-MEAN	San Joaquin River at San Andreas Landing  EC
+QUALV8.2.2/RSAN037/EC-MEAN	San Joaquin River at Prisoners Point EC
+QUALV8.2.2/SJR_SAN_ANDREAS/EC-MEAN	San Joaquin River at San Andreas EC
+QUALV8.2.2/RSAN043/EC-MEAN	San Joaquin River at Venice Island  EC
+QUALV8.2.2/RSAN046/EC-MEAN	San Joaquin River between Turner & Columbia Cut EC
+QUALV8.2.2/COLUMBIA_CUT/EC-MEAN	Columbia Cut EC
+QUALV8.2.2/TRNR_CUT/EC-MEAN	Turner Cut EC
+QUALV8.2.2/RSAN058/EC-MEAN	San Joaquin River at Stockton EC
+QUALV8.2.2/RSAN072/EC-MEAN	San Joaquin River at Brandt Bridge EC
+QUALV8.2.2/RSAN112/EC-MEAN	San Joaquin River at Vernalis EC
+QUALV8.2.2/ROLD024/EC-MEAN	Old River at Rock Slough EC
+QUALV8.2.2/ROLD034/EC-MEAN	Old River at Hwy4 EC
+QUALV8.2.2/ROLD059/EC-MEAN	Old River at Tracy Road EC
+QUALV8.2.2/SJR_BUCKLEY_COVE/EC-MEAN	San Joaquin River at Buckley Cove EC
+QUALV8.2.2/ROLD074/EC-MEAN	Old River at Head EC
+QUALV8.2.2/RMID015_144/EC-MEAN	Middle River at Bacon Island (channel 144) EC
+QUALV8.2.2/CLIFTON_COURT/EC-MEAN	Clifton Court Forebay EC
+QUALV8.2.2/CHSWP003/EC-MEAN	Old River at Clifton Court Forebay EC
+QUALV8.2.2/CHDMC006/EC-MEAN	Delta Mendota Canal at Jones Pumping Plant EC
+QUALV8.2.2/X2/POSITION	Average X2 Distance
+	
+	
+	
+	
+	
