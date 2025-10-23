@@ -34,6 +34,11 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     Panel Object
         Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -183,7 +188,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(
-                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+                pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                     x='Date',
                     y=unit_keeplist,
                     ylabel=unit_choice,
@@ -191,7 +196,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     xlabel='Date',
                     grid=True,
                     min_height=600
-                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
+                )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
@@ -205,7 +210,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         else:
             return pn.Column(
-                pn.pane.HoloViews(df_plot.hvplot(
+                pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
                     x='Date',
                     y=unit_keeplist,
                     ylabel=unit_choice,
@@ -213,7 +218,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     group_label='',
                     grid=True,
                     min_height=600,
-                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
+                )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
@@ -280,6 +285,11 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     Panel Object
         Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -672,6 +682,11 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1162,6 +1177,11 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1715,6 +1735,11 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
