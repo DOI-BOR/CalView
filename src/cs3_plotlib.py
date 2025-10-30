@@ -1409,14 +1409,14 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             # assign the WYt to be the correct one
             df_grouped[keeplist[:len(scenario_list)]] = df_grouped[keeplist[:len(scenario_list)]] / len(li_wyt_period_months)
 
-            # get rid of other columns we dont need
+            # get rid of other columns we don't need
             df_plot = df_grouped[keeplist]
 
         df_final = pd.DataFrame(index=pd.MultiIndex.from_product([li_wyt_selected, scenario_list], names=[s_wyt_col, 'Scenario']))
         for i_wyt in li_wyt_selected:
             for s_scen in scenario_list:
                 s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
-                df_temp = df_wide[df_wide[s_scen_wyt_col] == i_wyt]
+                df_temp = df_plot[df_plot[s_scen_wyt_col] == i_wyt]
                 col_names = [f'{s_scen}: {var_list_final[0]}']
                 if stat_choice == 'Average':
                     df_temp = df_temp[col_names].mean()
@@ -1451,7 +1451,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                 df_final.loc[(i_wyt, s_scen), var_list_final[0]] = df_temp.values
         for s_scen in scenario_list:
             s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
-            df_temp = df_wide[df_wide[s_scen_wyt_col].isin(li_wyt_selected)]
+            df_temp = df_plot[df_plot[s_scen_wyt_col].isin(li_wyt_selected)]
             col_names = [f'{s_scen}: {var_list_final[0]}']
             if stat_choice == 'Average':
                 df_temp = df_temp[col_names].mean()
