@@ -34,6 +34,11 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
     Panel Object
         Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -183,7 +188,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
         # add horizontal line if we are doing the differences plot
         if b_diffs_flag:
             return pn.Column(
-                pn.pane.HoloViews(hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
+                pn.pane.HoloViews((hv.HLine(0).opts(color='black', line_width=1) * df_plot.hvplot(
                     x='Date',
                     y=unit_keeplist,
                     ylabel=unit_choice,
@@ -191,7 +196,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     xlabel='Date',
                     grid=True,
                     min_height=600
-                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
+                )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
@@ -205,7 +210,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                 pn.pane.DataFrame(df_plot, index=False, max_height=500))
         else:
             return pn.Column(
-                pn.pane.HoloViews(df_plot.hvplot(
+                pn.pane.HoloViews((hv.HLine(0).opts(line_width=0) * df_plot.hvplot(
                     x='Date',
                     y=unit_keeplist,
                     ylabel=unit_choice,
@@ -213,7 +218,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, s
                     group_label='',
                     grid=True,
                     min_height=600,
-                ).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
+                )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False),
                 pn.pane.HoloViews(df_plot.hvplot.scatter(
                     x='Date',
                     y=no_unit_keeplist,
@@ -280,6 +285,11 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     Panel Object
         Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -356,7 +366,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # sort for the years we want
         # see if any years are selected
         if not li_wyt_selected:
@@ -394,7 +404,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -451,7 +461,7 @@ def plot_time_group(scenario_list, var_list, unit_choice, df_all,
             )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_plot, max_height=500))
 
     # if water year type is selected as period
-    elif 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    elif isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -672,6 +682,11 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -749,7 +764,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # sort for the years we want
         # see if any years are selected
         if not li_wyt_selected:
@@ -789,7 +804,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -870,7 +885,7 @@ def plot_time_exceedance(scenario_list, var_list, unit_choice, df_all,
             )).opts(legend_position='bottom', legend_cols=1), sizing_mode='stretch_width', linked_axes=False), pn.pane.DataFrame(df_exceed, index=False, max_height=500))
 
     # if water year type is selected as period
-    elif 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    elif isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -1162,6 +1177,11 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1239,7 +1259,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # sort for the years we want
         # see if any years are selected
         if not li_wyt_selected:
@@ -1276,7 +1296,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     keeplist = []
 
     # if grouping by wyt we need to include that variable
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         for scenario in scenario_list:
             df_temp = df_all_plot.loc[df_all_plot['Scenario'] == scenario][[s_wyt_col]]
             df_temp.reset_index(inplace=True, drop=True)
@@ -1339,7 +1359,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                 df_stats = df_exceed.loc[i_exceedance_prob].to_frame()
 
     # if water year type is selected as period
-    elif 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    elif isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # filter for selected WYTs
         # get rif of anywhere all wyt columns are empty
         df_wide = df_wide.dropna(subset=keeplist[:len(scenario_list)], how='all')
@@ -1389,14 +1409,14 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
             # assign the WYt to be the correct one
             df_grouped[keeplist[:len(scenario_list)]] = df_grouped[keeplist[:len(scenario_list)]] / len(li_wyt_period_months)
 
-            # get rid of other columns we dont need
+            # get rid of other columns we don't need
             df_plot = df_grouped[keeplist]
 
         df_final = pd.DataFrame(index=pd.MultiIndex.from_product([li_wyt_selected, scenario_list], names=[s_wyt_col, 'Scenario']))
         for i_wyt in li_wyt_selected:
             for s_scen in scenario_list:
                 s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
-                df_temp = df_wide[df_wide[s_scen_wyt_col] == i_wyt]
+                df_temp = df_plot[df_plot[s_scen_wyt_col] == i_wyt]
                 col_names = [f'{s_scen}: {var_list_final[0]}']
                 if stat_choice == 'Average':
                     df_temp = df_temp[col_names].mean()
@@ -1431,7 +1451,7 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
                 df_final.loc[(i_wyt, s_scen), var_list_final[0]] = df_temp.values
         for s_scen in scenario_list:
             s_scen_wyt_col = f'{s_scen}: {s_wyt_col}'
-            df_temp = df_wide[df_wide[s_scen_wyt_col].isin(li_wyt_selected)]
+            df_temp = df_plot[df_plot[s_scen_wyt_col].isin(li_wyt_selected)]
             col_names = [f'{s_scen}: {var_list_final[0]}']
             if stat_choice == 'Average':
                 df_temp = df_temp[col_names].mean()
@@ -1539,6 +1559,11 @@ def plot_bars(df_all, period_choice, var_list, scenario_list,
     # Month chosen
     elif isinstance(period_choice, int):
         df_wide = df_wide[df_wide.Month == period_choice]
+
+        # Can't sum dates: drop
+        df_wide = df_wide.drop('Date', axis=1)
+
+        # this will group by year so there will only be one value
         df_grouped = df_wide.groupby(by=['JanDecYear']).agg(agg_func)
         df_plot = df_grouped[keeplist]
 
@@ -1715,6 +1740,11 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     Panel Object
             Plot and table of data as a column
     """
+
+    # if the data frame is empty, return a markdown frame. This will happen if only one scenario is selected and its the comparison one. the differences will be empty
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+
     df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
     df_all_plot.reset_index(inplace=True, drop=False)
     durations = [date.day for date in df_all_plot['Date']]
@@ -1791,7 +1821,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     var_list_final = [c_field_list[var] for var in var_list_final]
 
     # if we are sorting by WYT we need to do some work before switching to wide frame
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # sort for the years we want
         # see if any years are selected
         if not li_wyt_selected:
@@ -1831,7 +1861,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
     s_title = ''
 
     # if grouping by wyt we need to include that variable
-    if 'WYT' in period_choice or 'SHASTABIN_' in period_choice:
+    if isinstance(period_choice, str) and ('WYT' in period_choice or 'SHASTABIN_' in period_choice):
         # to hold the wyt columns so we can filter with them but they dont end up in keeplist
         ls_wyt_cols = []
         for scenario in scenario_list:
