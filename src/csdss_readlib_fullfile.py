@@ -223,6 +223,11 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_flag):
     pathNames = np.array(list(pathNamesDict.values())[0])
 
     dfPaths = pd.DataFrame(pathNames, columns=["AllPaths"])
+
+    # is this is empty, the dss file is empty
+    if dfPaths.empty:
+        raise Exception(f'No pathnames found in {dss_file}')
+
     # If the interpreter gives an error
     dfPaths[['blank1', 'A', 'B', 'C', 'D', 'E', 'F', 'blank2']] = \
             dfPaths['AllPaths'].str.split("/", expand=True)
@@ -258,7 +263,9 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_flag):
 
             elif s_flag == 'salinity':
                 f_part = dfPaths[dfPaths[['A', 'B', 'C']].agg('/'.join, axis=1) == b_part]['F'].iloc[0]
-                e_part = '1MON'
+                # pull out the 1 month e part. (1MON for dss6 and 1Month for dss7)
+                e_part = dfPaths[dfPaths[['A', 'B', 'C']].agg('/'.join, axis=1) == b_part]['E'].values
+                e_part = [part for part in e_part if '1M' in part][0]
                 target_pathName = f'/{b_part}//{e_part}/{f_part}/'
 
 
@@ -282,6 +289,10 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_flag):
     if not df_ts.empty:
         # move dates back by one day
         df_ts.index = df_ts.index + datetime.timedelta(days=-1)
+
+    # if the dataframe is empty, raise an error
+    else:
+        raise Exception(f'No fields from field list found in {dss_file}')
 
     return df_ts, c_target_ts_list_final, c_default_units
 
