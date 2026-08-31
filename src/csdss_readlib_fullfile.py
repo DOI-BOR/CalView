@@ -62,12 +62,15 @@ def get_shapefile(s_shapefile_name):
     Loads a shapefile by name and returns a cleand GeoDataFrame with just ID column and geometry, reprojected to lat/lon for spatial plots.
     Parameters
     ----------
-    s_shapefile_name: str (name of the shapefile to load as stored in the field metadata)
+    s_shapefile_name: str
+        name of the shapefile to load as stored in the field metadata
 
     Returns
     -------
-    o_gdf: GeoDataFrame (ID column + 'geometry')
-    s_id_col: str (name of the ID column, for merging)
+    o_gdf: GeoDataFrame
+        ID column + 'geometry'
+    s_id_col: str
+        name of the ID column, for merging
     """
     c_shapefile_id_cols = {
         'WBAs': 'WBA_ID',
@@ -323,9 +326,13 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
 
 def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
     """
-    reads in the list of runs. can be multiproccessing or not by changing multiprocess to True.
+    reads in the list of runs.
     Parameters
     ----------
+    runs: list
+        list of runs and run names in the form [["Description_1", "File_1.dss"], ...] (single-file modules, e.g. 'calsim'/'hydro_out') or
+        [["Description_1", {'calsim': '...', ...}], ...] (multi-file modules, e.g. 'temperature'/'salinity'/'hydro_in', where the dict keys are the
+        expected file roles for that module)
     runs: list
         list of runs and run names in the form [["Description_1", ("File_1.dss")], ...] or [["Description_1", {'calsim': '...', ...}], ...]
     c_field_list: dict
@@ -339,7 +346,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
     -------
     append_list: list
         list of the dataframes of each run
-    baseline_stack:
+    baseline_stack: list
         a list of dataframes of the comparison scenerio as many times as there are runs
     c_default_units: dict
         dictionary of the default units for each field
@@ -693,7 +700,7 @@ def calculated_fields(df_all, c_field_list, c_default_units):
     c_field_list_curr = c_field_list.copy()
     c_default_units_curr = c_default_units.copy()
 
-    # dictionary of what fields each calculated field needs TODO specify which are for which calview version
+    # dictionary of what fields each calculated field needs
     c_fields_for_calculated = {
         'Total System Storage SWP and CVP': ['S_TRNTY', 'S_SHSTA', 'S_OROVL', 'S_FOLSM', 'S_SLUIS_CVP', 'S_SLUIS_SWP'],
         'Total Exports SWP and CVP': ['C_CAA003_SWP', 'C_DMC003', 'C_CAA003_CVP'],

@@ -617,17 +617,12 @@ def create_widgets(scenario_names, c_field_list):
         width=400
     )
 
-    # Create checkbox widget to specify CalSimHydro Files w/  Spatial Data todo remove
-    wba_spatial_sel = pn.widgets.Checkbox(
-        name='Create Spatial Plot (only select if data has WBA specific values, i.e. CalSimHydro Files)'
-    )
-
     # Check boxed for showing years in exceedance tables
     exceedance_show_year_check = pn.widgets.Checkbox(name='Show year in table')
     exceedance_show_year_check_diffs = pn.widgets.Checkbox(name='Show year in table')
 
     # Return all these widgets
-    return scen_selector, unit_selector, temp_unit_selector, period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year, bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs, wba_spatial_sel
+    return scen_selector, unit_selector, temp_unit_selector, period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year, bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs
 
 
 def create_metadata(scenario_names, c_field_list, c_default_units, s_module):
@@ -728,7 +723,7 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_module):
     # Title for fields and descriptions
     o_field_names_title = pn.pane.Markdown("# Fields and descriptions")
 
-    # Dictionary with formulas for calculated fields TODO specify which of these are for which calview, add hydro calcs to here
+    # Dictionary with formulas for calculated fields
     c_calcs_for_calculated = {
         'Total System Storage SWP and CVP': 'S_TRNTY + S_SHSTA + S_OROVL + S_FOLSM + S_SLUIS_CVP + S_SLUIS_SWP',
         'Total Exports SWP and CVP': 'C_CAA003_SWP + C_DMC003 + C_CAA003_CVP',
@@ -864,12 +859,8 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
             single_year_scenarios.extend(scenario_names)
 
     df_all_data_combined = pd.concat(ls_df_all, ignore_index=True)
-    df_diffs_combined = pd.concat(ls_df_diffs, ignore_index=True)
     df_field_names_combined = pd.concat(ls_field_names_dfs)
     scenario_names_combined = df_all_data_combined['Scenario'].unique().tolist()
-
-    # remove comparison scen from the differences dataframe as all values are zero
-    df_diffs_combined = df_diffs_combined[~df_diffs_combined.Scenario.isin(ls_all_comparisons)]
 
     # naming stage no longer needed now that all modules' data is loaded and combined
     for _ in range(len(module_column)):
@@ -877,10 +868,10 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
 
     # Create the shared widgets
     (scen_selector, unit_selector, temp_unit_selector,period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year,
-      bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs, wba_spatial_sel) = create_widgets(scenario_names_combined, c_field_list_all)
-    #spatial plotting is always on for hydro (intentially not using wba_spatial_sel
-    # to update the visibility when period is changed todo remove?
-    wyt_watcher = period_selector.param.watch(partial(hide_show_wyt, header=header), 'value')
+      bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs) = create_widgets(scenario_names_combined, c_field_list_all)
+
+    # to update the visibility when period is changed
+    period_selector.param.watch(partial(hide_show_wyt, header=header), 'value')
 
     header.append(scen_selector)
     header.append(pn.Column(period_selector, pn.Column(wyt_selector, pn.Row(wyt_period_selector_year, wyt_period_selector), visible=False), max_width=300))
@@ -1500,7 +1491,7 @@ def add_run_names_widget(event, s_module, file_picker_col_tracker, run_name_col_
         #Also add optional field add text box
         add_field_instructions = pn.pane.Markdown("""
         # OPTIONAL additional fields: """, renderer='markdown')
-        if s_module in ('calsim', 'hydro_out', 'hydro_in'): #todo add hydro in to this section
+        if s_module in ('calsim', 'hydro_out', 'hydro_in'):
             # if calsim, only need the b part for the fields
             add_field_instructions_details = pn.pane.Markdown("""
     
