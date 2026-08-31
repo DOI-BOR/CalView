@@ -4,10 +4,8 @@ from os import path
 import holoviews as hv
 from functools import partial
 
-import pyproj
 # Set some default behavior
-pn.extension(sizing_mode='stretch_width')
-pn.extension(notifications=True)
+pn.extension(sizing_mode='stretch_width', notifications=True)
 # change default colors to first go through Reclamation colors and then original default colors for line plots
 hv.opts.defaults(hv.opts.Curve(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
 hv.opts.defaults(hv.opts.Bars(color=hv.Cycle(['#003E51', '#007396', '#C69214', '#FF671F', '#215732', '#4C12A1', '#9A3324'] + hv.Cycle.default_cycles["default_colors"])))
@@ -15,7 +13,7 @@ hv.opts.defaults(hv.opts.Scatter(color=hv.Cycle(['#003E51', '#007396', '#C69214'
 
 # Visualizer formatting code
 
-# Flag for hydro version
+# Flag for version
 c_flag = {'calsim':False,
           'hydro_out':False,
           'hydro_in':False,
@@ -170,11 +168,10 @@ def build_module_widgets(s_module):
     file_picker_column.append(None)
     file_picker_col_tracker.append("dss_file")
 
-    # Watch the old_new_sel widget and call remove_widget function to update dss_file if a change event occurs
+    #watch the old_new_sel widget and call update_dss_file_widget to swap between old and new file selector
     choice_watcher = old_new_sel.param.watch(
         partial(update_dss_file_widget, s_module=s_module, file_picker_column=file_picker_column,
                 file_picker_col_tracker=file_picker_col_tracker), ['value'], onlychanged=False)
-    old_new_sel.value = "New outputs"
     c_old_new_watcher.append(choice_watcher)
 
     c_module_containers[s_module] = {
@@ -231,6 +228,9 @@ def build_module_sections(event=None):
 
         module_column.append(pn.pane.Markdown(f"## {c_modules.get(s_module, s_module)}"))
         module_column.append(display)
+
+    # trigger old_new_sel once
+    old_new_sel.value = "New outputs"
 
     module_column.append(done_selecting_row)  # clear the button's row once clicked, using the top-level helper instead of a closure
 
