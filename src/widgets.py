@@ -431,7 +431,10 @@ def update_dss_file_widget(event, s_module, file_picker_column, file_picker_col_
         # Pickle files
         else:
             o_instructions = pn.pane.Markdown('### <span style="color:red">Select the module pickle file previously created (module_&lt;name&gt;.pkl)</span>')
-            o_instructions_tooltip = pn.widgets.TooltipIcon(value="Move the pkl file from 'File Browser' section to 'Selected files' section then click 'Continue'")
+            o_instructions_tooltip = pn.widgets.TooltipIcon(
+                value="Move the pkl file from 'File Browser' section to 'Selected files' section then click 'Continue'. "
+                      f"If you renamed the file, it must still contain '{s_module}' somewhere in the filename."
+            )
             dss_file = pn.widgets.FileSelector(
                 name='Select CalSim output DSS file for new run or pickle file for previous run',
                 file_pattern="*.pkl",
@@ -1888,6 +1891,17 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
     #Load pickles from previous run
     else:
         df_all_data, df_diffs, c_default_units, c_field_list = load_pickles(files, s_module)
+
+    # load_pickles returns all none on any failure (wrong module, missing file, etc.) bail here if this is the case
+    if c_default_units is None:
+        # remove the loading spinner so the page doesn't look stuck
+        if 'loading_row' in field_col_tracker:
+            loading_index = field_col_tracker.index('loading_row')
+            field_column.pop(loading_index)
+            field_col_tracker.pop(loading_index)
+            field_column.param.trigger("objects")
+        return None
+
 
     # need to pull comparison scenario from un pickled files
     s_comparison = c_default_units['comparison scenario']

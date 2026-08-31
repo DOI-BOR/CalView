@@ -17,7 +17,7 @@ hv.opts.defaults(hv.opts.Scatter(color=hv.Cycle(['#003E51', '#007396', '#C69214'
 
 # Flag for hydro version
 c_flag = {'calsim':False,
-          'hydro_out':True,
+          'hydro_out':False,
           'hydro_in':False,
           'temperature':False,
           'salinity':False}

@@ -141,6 +141,7 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module
 
     #bundle everything into one dict
     c_module_data = {
+        'module': s_module,
         'values': df_all_data,
         'diffs': df_diffs,
         'units': c_default_units,
@@ -179,10 +180,23 @@ def load_pickles(ls_files, s_module):
         #ls_files should contain exactly one file: the module pickle
         s_module_path = ls_files[0]
 
+    #filename check - module name must appear somewhere in the filename but extra text is fine
+    s_filename = path.basename(s_module_path)
+    if s_module.lower() not in s_filename.lower():
+        print(f'Selected file "{s_filename}" does not appear to be a "{s_module}" pickle. Please select the correct file.')
+        return None, None, None, None
+
     try:
         load_module = open(s_module_path, 'rb')
         c_module_data = pickle.load(load_module)
         load_module.close()
+
+        #module check - catches renamed files the filename check would miss, skip for older pickles that dont have the key
+        s_stored_module = c_module_data.get('module')
+        if s_stored_module is not None and s_stored_module != s_module:
+            s_error = f'File "{s_filename}" contains data for module "{s_stored_module}", not "{s_module}". Please select the correct file.'
+            print(s_error)
+            return None, None, None, None
         df_all_data = c_module_data['values']
         df_diffs = c_module_data['diffs']
         c_default_units = c_module_data['units']
@@ -333,8 +347,6 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
         list of runs and run names in the form [["Description_1", "File_1.dss"], ...] (single-file modules, e.g. 'calsim'/'hydro_out') or
         [["Description_1", {'calsim': '...', ...}], ...] (multi-file modules, e.g. 'temperature'/'salinity'/'hydro_in', where the dict keys are the
         expected file roles for that module)
-    runs: list
-        list of runs and run names in the form [["Description_1", ("File_1.dss")], ...] or [["Description_1", {'calsim': '...', ...}], ...]
     c_field_list: dict
         dictionary of fields and descriptions {field: description, ...}
     s_comparison: str
