@@ -99,7 +99,7 @@ def filter_scenarios_to_wyt_module(selected_scenarios, period_choice, module_res
     ):
         return selected_scenarios
 
-    for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m in module_results:
+    for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m, c_native_freq_m in module_results:
         if period_choice in c_fields_m:
             return [
                 scen for scen in selected_scenarios
@@ -516,6 +516,14 @@ def create_widgets(scenario_names, c_field_list):
         Checkbox for showing year in exceedence table
     exceedance_show_year_check_diffs: obj
         Checkbox for showing year in differences exceedence table
+    time_step_selector: obj
+        Monthly/Daily time step toggle widget
+    start_date_picker: obj
+        Start date picker widget
+    end_date_picker: obj
+        End date picker widget
+    ts_apply_button: obj
+        Button that triggers the timeseries plot to update using the current widget selections (scenarios, variables, units, time step, dates)
     """
 
     # Select which alts to examine
@@ -546,6 +554,22 @@ def create_widgets(scenario_names, c_field_list):
         width=200,
         margin=32
     )
+    # Toggle for time step
+    time_step_selector = pn.widgets.RadioButtonGroup(
+        name='Time step selector',
+        options=['Monthly', 'Daily'],
+        button_style='outline',
+        button_type='primary',
+        width=200,
+        margin=32
+    )
+
+    # Date range pickers
+    start_date_picker = pn.widgets.DatePicker(name='Start Date', width=150)
+    end_date_picker = pn.widgets.DatePicker(name='End Date', width=150)
+
+    # Apply button - timeseries plot only updates when this is clicked
+    ts_apply_button = pn.widgets.Button(name='Apply', button_type='primary', width=100)
 
     # Selector for time period
     period_selector = pn.widgets.Select(
@@ -625,10 +649,13 @@ def create_widgets(scenario_names, c_field_list):
     exceedance_show_year_check_diffs = pn.widgets.Checkbox(name='Show year in table')
 
     # Return all these widgets
-    return scen_selector, unit_selector, temp_unit_selector, period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year, bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs
+    return (scen_selector, unit_selector, temp_unit_selector, period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year, bar_stat_sel, monthly_stat_sel,
+            exceedance_show_year_check, exceedance_show_year_check_diffs,
+            time_step_selector, start_date_picker, end_date_picker, ts_apply_button
+            )
 
 
-def create_metadata(scenario_names, c_field_list, c_default_units, s_module):
+def create_metadata(scenario_names, c_field_list, c_default_units, s_module, c_native_freq):
     """
     Create the metadata section
 
@@ -642,6 +669,8 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_module):
         Dictionary of default units
     s_module: str
         Flag for module from c_flag
+    c_native_freq: dict
+        Dictionary of fields and native time steps
 
     Returns
     -------
@@ -689,6 +718,17 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_module):
 
     # Add in units for each field
     df_field_names['Default Units'] = df_field_names.index.map(c_default_units)
+
+    c_native_freq = c_native_freq or {}
+    # build the list of frequencies, one per field, in the same order as df_field_names.index
+    ls_frequencies = []
+    for field in df_field_names.index:
+        if field in c_native_freq:
+            ls_frequencies.append(c_native_freq[field])
+        else:
+            ls_frequencies.append('monthly')
+
+    df_field_names['Native Frequency'] = ls_frequencies
 
     # Module for each field
     df_field_names['Module'] = s_module
@@ -818,7 +858,7 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     module_results: list
         List of per-module tuples, each in the form
         (df_all_data, df_diffs, c_default_units, c_field_list, s_comparison,
-        scenario_names, s_module), as returned by update_run_names for each active module
+        scenario_names, s_module, c_native_freq), as returned by update_run_names for each active module
     module_column: obj
         Panel Column holding the naming stage; cleared once all modules' data is combined
     header: obj
@@ -841,20 +881,22 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     ls_df_diffs = []
     c_field_list_all = {}
     c_default_units_all = {}
+    c_native_freq_all = {}
     ls_all_comparisons = []
     ls_metadata_panels = []
     ls_field_names_dfs = []
     single_year_scenarios = []
 
-    for df_all_data, df_diffs, c_default_units, c_field_list, s_mod_comparison, scenario_names, s_module in module_results:
+    for df_all_data, df_diffs, c_default_units, c_field_list, s_mod_comparison, scenario_names, s_module, c_native_freq in module_results:
         ls_df_all.append(df_all_data)
         ls_df_diffs.append(df_diffs)
         c_field_list_all.update(c_field_list)
         c_default_units_all.update(c_default_units)
+        c_native_freq_all.update(c_native_freq)
         ls_all_comparisons.append(s_mod_comparison)
 
         #create metadata
-        o_metadata, df_field_names = create_metadata(scenario_names, c_field_list, c_default_units, s_module)
+        o_metadata, df_field_names = create_metadata(scenario_names, c_field_list, c_default_units, s_module, c_native_freq)
         ls_metadata_panels.append((c_modules.get(s_module, s_module), o_metadata))
         ls_field_names_dfs.append(df_field_names)
 
@@ -871,7 +913,12 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
 
     # Create the shared widgets
     (scen_selector, unit_selector, temp_unit_selector,period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year,
-      bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs) = create_widgets(scenario_names_combined, c_field_list_all)
+      bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs,
+     time_step_selector, start_date_picker, end_date_picker, ts_apply_button) = create_widgets(scenario_names_combined, c_field_list_all)
+
+    # default the date pickers to the full range of the combined data
+    start_date_picker.value = df_all_data_combined['Date'].min().date()
+    end_date_picker.value = df_all_data_combined['Date'].max().date()
 
     # to update the visibility when period is changed
     period_selector.param.watch(partial(hide_show_wyt, header=header), 'value')
@@ -884,7 +931,7 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
 
     # Build one exceedance section per module since exceedance plots are module specific
     exceedance_sections = []
-    for df_all_data, df_diffs, c_default_units, c_field_list, s_mod_comparison, scenario_names, s_module in module_results:
+    for df_all_data, df_diffs, c_default_units, c_field_list, s_mod_comparison, scenario_names, s_module, c_native_freq in module_results:
         #strip this module's own comparison scenario out of its own diffs scen
         df_diffs_m_filtered = df_diffs[df_diffs.Scenario != s_mod_comparison]
         mod_description_to_field = {desc: field for field, desc in c_field_list.items()}
@@ -962,7 +1009,7 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     b_have_spatial = len(spatial_fields) > 0
     c_gdf_by_name = {}
     if b_have_spatial:
-        for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m in module_results:
+        for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m, c_native_freq_m in module_results:
             # remove comparison scen from this module's differences dataframe as all values are zero
             df_diffs_m = df_diffs_m[df_diffs_m.Scenario != s_mod_comp_m]
 
@@ -1071,7 +1118,7 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
 
             # scenarios/files belonging to that module
             valid_scenarios = []
-            for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m in module_results:
+            for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m, c_native_freq_m in module_results:
                 if s_mod_m == s_wyt_module:
                     valid_scenarios.extend(scen_names_m)
 
@@ -1117,16 +1164,31 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     # Create other plots
 
     # Timeseries plot
+    def render_ts_plot(n_clicks):
+        """
+        Renders the main timeseries plot using the CURRENT values of the
+        timeseries widgets at the moment this is called. Only re-runs when
+        ts_apply_button is clicked, so changing scenarios, variables, units, time step, or dates does nothing
+        until Apply is pressed
+        """
+        return plot_values(
+            scenario_list=scen_selector.value,
+            var_list=var_selector_ts.value,
+            unit_choice=unit_selector.value,
+            df_all=df_all_data_combined,
+            c_default_units=c_default_units_all,
+            ls_comparison=ls_all_comparisons,
+            c_field_list=c_field_list_all,
+            temp_unit_choice=temp_unit_selector.value,
+            c_native_freq=c_native_freq_all,
+            s_time_step=time_step_selector.value.lower(),
+            s_start_date=start_date_picker.value,
+            s_end_date=end_date_picker.value,
+        )
+    #create timeseries plot
     bound_plot_ts = pn.bind(
-        plot_values,
-        scenario_list=scen_selector,
-        var_list=var_selector_ts,
-        unit_choice=unit_selector,
-        df_all=df_all_data_combined,
-        c_default_units=c_default_units_all,
-        ls_comparison=ls_all_comparisons,
-        c_field_list=c_field_list_all,
-        temp_unit_choice=temp_unit_selector,
+        render_ts_plot,
+        n_clicks=ts_apply_button,
     )
 
     # Time aggregated plot
@@ -1182,7 +1244,7 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
 
     #module specific comparison plots
     c_diff_plots = {'ts':[], 'grouped': [], 'bar': [], 'monthly': []}
-    for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m in module_results:
+    for df_all_m, df_diffs_m, c_units_m, c_fields_m, s_mod_comp_m, scen_names_m, s_mod_m, c_native_freq_m in module_results:
         # remove comparison scen from this module's differences dataframe as all values are zero
         df_diffs_m = df_diffs_m[df_diffs_m.Scenario != s_mod_comp_m]
         #filtered var list
@@ -1191,13 +1253,24 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
         mod_var_bar = pn.bind(filter_vars_to_module, var_selector_bar, c_fields_m)
         mod_var_monthly = pn.bind(filter_vars_to_module, var_selector_monthly, c_fields_m)
 
-        #time series comparison plots
+        # time series comparison plots - gated behind the same shared ts_apply_button
         c_diff_plots['ts'].append((s_mod_m, s_mod_comp_m, pn.bind(
-            plot_values,
-            scenario_list=scen_selector, var_list=mod_var_ts,
-            unit_choice=unit_selector, df_all=df_diffs_m,
-            c_default_units=c_units_m, ls_comparison=[s_mod_comp_m],
-            c_field_list=c_fields_m, temp_unit_choice=temp_unit_selector
+            lambda n_clicks, df_diffs_m=df_diffs_m, c_units_m=c_units_m, s_mod_comp_m=s_mod_comp_m,
+                   c_fields_m=c_fields_m, c_native_freq_m=c_native_freq_m, mod_var_ts=mod_var_ts: plot_values(
+                scenario_list=scen_selector.value,
+                var_list=mod_var_ts(),
+                unit_choice=unit_selector.value,
+                df_all=df_diffs_m,
+                c_default_units=c_units_m,
+                ls_comparison=[s_mod_comp_m],
+                c_field_list=c_fields_m,
+                temp_unit_choice=temp_unit_selector.value,
+                c_native_freq=c_native_freq_m,
+                s_time_step=time_step_selector.value.lower(),
+                s_start_date=start_date_picker.value,
+                s_end_date=end_date_picker.value,
+            ),
+            n_clicks=ts_apply_button,
         )))
         #time aggregated differences plots
         c_diff_plots['grouped'].append((s_mod_m, s_mod_comp_m, pn.bind(
@@ -1305,7 +1378,12 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     make_diff_tabs(c_diff_plots['bar'], "Bar Plot", single_var_plots, c_modules)
 
     # Timeseries
-    timeseries_plots.append(pn.Column(ts_title, var_selector_ts, bound_plot_ts))
+    timeseries_plots.append(pn.Column(
+        ts_title,
+        var_selector_ts,
+        pn.Row(time_step_selector, start_date_picker, end_date_picker, ts_apply_button),
+        bound_plot_ts
+    ))
     make_diff_tabs(c_diff_plots['ts'], "Timeseries", timeseries_plots, c_modules)
 
     # Time-Aggregated
@@ -1607,6 +1685,8 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
     s_module: str
         Which module this data belongs to (passed through unchanged, for use by the caller
         when combining results across modules)
+    c_native_freq: dict
+        dicitonary of field and native time resolution
     """
 
     # Get selected files
@@ -1776,12 +1856,12 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
 
             runs.append([run_name_column[run_index][0].value, c_dss_paths])
         print(runs)
-        append_list, baseline_stack, c_default_units, c_field_list = file_reader(runs, c_field_list, s_comparison, s_module)
-        pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module)
+        append_list, baseline_stack, c_default_units, c_field_list, c_native_freq = file_reader(runs, c_field_list, s_comparison, s_module)
+        pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module, c_native_freq)
 
         # This runs no matter what. The pickle files allow you to come back and
         # pull the same variables without waiting for the file reads to complete
-        df_all_data, df_diffs, c_default_units, c_field_list = load_pickles([], s_module)
+        df_all_data, df_diffs, c_default_units, c_field_list, c_native_freq = load_pickles([], s_module)
 
         # Write to Excel.
         # try:
@@ -1871,13 +1951,13 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
 
             runs.append([run_name_column[run_index][0].value, (files[file_index])])
         print(runs)
-        append_list, baseline_stack, c_default_units, c_field_list = file_reader(runs, c_field_list, s_comparison, s_module)
+        append_list, baseline_stack, c_default_units, c_field_list, c_native_freq = file_reader(runs, c_field_list, s_comparison, s_module)
 
-        pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module)
+        pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module, c_native_freq)
 
         # This runs no matter what. The pickle files allow you to come back and
         # pull the same variables without waiting for the file reads to complete
-        df_all_data, df_diffs, c_default_units, c_field_list = load_pickles([], s_module)
+        df_all_data, df_diffs, c_default_units, c_field_list, c_native_freq = load_pickles([], s_module)
 
         # Write to Excel.
         # try:
@@ -1890,7 +1970,7 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
 
     #Load pickles from previous run
     else:
-        df_all_data, df_diffs, c_default_units, c_field_list = load_pickles(files, s_module)
+        df_all_data, df_diffs, c_default_units, c_field_list, c_native_freq = load_pickles(files, s_module)
 
     # load_pickles returns all none on any failure (wrong module, missing file, etc.) bail here if this is the case
     if c_default_units is None:
@@ -1915,4 +1995,4 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
     field_col_tracker.pop(loading_index)
     field_column.param.trigger("objects")
 
-    return df_all_data, df_diffs, c_default_units, c_field_list, s_comparison, scenario_names, s_module
+    return df_all_data, df_diffs, c_default_units, c_field_list, s_comparison, scenario_names, s_module, c_native_freq
