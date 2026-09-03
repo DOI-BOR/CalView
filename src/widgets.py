@@ -4,6 +4,7 @@ import panel as pn
 import os
 import pandas as pd
 from future.builtins import disabled
+import datetime
 
 from src.cs3_plotlib import *
 from functools import partial
@@ -919,6 +920,21 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     # default the date pickers to the full range of the combined data
     start_date_picker.value = df_all_data_combined['Date'].min().date()
     end_date_picker.value = df_all_data_combined['Date'].max().date()
+
+    def shrink_range_for_daily(event):
+        """
+        When the timeseries time step is switched to Daily, auto-shrink the
+        date range to the last 1 year (end_date stays put, start_date moves to
+        end_date - 1 year) as a guardrail against accidentally triggering a
+        slow, full-history daily render. The person can still widen it back
+        out manually before pressing Apply. Runs every time Daily is selected,
+        even if they'd widened the range in a previous Daily session.
+        """
+        if event.new == 'Daily':
+            current_end = end_date_picker.value
+            start_date_picker.value = current_end - datetime.timedelta(days=365)
+
+    time_step_selector.param.watch(shrink_range_for_daily, 'value')
 
     # to update the visibility when period is changed
     period_selector.param.watch(partial(hide_show_wyt, header=header), 'value')

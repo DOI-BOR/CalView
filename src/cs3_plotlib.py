@@ -202,14 +202,30 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
 
     if df_all.empty:
         return pn.pane.Markdown("## No data to display")
+    # unit conversion
+    days_in_month_native = df_all['Date'].dt.days_in_month
 
-    # resample to monthly if selected
+    cfs_taf_native = np.multiply(days_in_month_native, (24 * 3600 / 43560 / 1000))
+    taf_cfs_native = np.divide((43560 * 1000 / 24 / 3600), days_in_month_native)
+
+    for var in var_list:git 
+        try:
+            original_unit = c_default_units[var].strip().upper()
+        except:
+            original_unit = None
+
+        if original_unit == 'CFS' and unit_choice == 'TAF':
+            df_all[var] = np.multiply(df_all[var], cfs_taf_native)
+        elif original_unit == 'TAF' and unit_choice == 'CFS':
+            df_all[var] = np.multiply(df_all[var], taf_cfs_native)
+        # temperature/unitless/other units are NOT converted here
+
     if s_time_step == 'monthly':
+        # resample the ALREADY-CONVERTED values
         df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
         df_all_plot.reset_index(inplace=True, drop=False)
-        durations = [date.day for date in df_all_plot['Date']]
-    # daily mode
     else:
+        # daily mode
         ls_cols_to_expand = list(dict.fromkeys(
             [v for v in var_list if v in df_all.columns]
         ))
@@ -218,23 +234,17 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
         for scenario, df_scen in df_all.groupby('Scenario'):
             df_scen = df_scen.sort_values('Date').set_index('Date')
 
-            # does this scenario have any genuinely daily rows already?
             b_scen_is_monthly = df_scen.index.is_month_end.all()
 
             if b_scen_is_monthly:
-                # expand to a full daily calendar from the 1st of the first
-                # month through the last date, then forward/back-fill the
-                # selected columns so each shows a flat step across its month
                 full_idx = pd.date_range(df_scen.index.min().replace(day=1), df_scen.index.max(), freq='D')
                 df_scen = df_scen.reindex(full_idx)
                 if ls_cols_to_expand:
                     df_scen[ls_cols_to_expand] = df_scen[ls_cols_to_expand].ffill().bfill()
                 df_scen['Scenario'] = scenario
             else:
-                # already has some daily rows for this scenario - still fill
-                # any selected column that's individually monthly-only within
-                # this daily scenario
-                ls_monthly_only_cols = [c for c in ls_cols_to_expand if c_native_freq.get(c, 'monthly') == 'monthly']
+                ls_monthly_only_cols = [c for c in ls_cols_to_expand if
+                                        c_native_freq.get(c, 'monthly') == 'monthly']
                 if ls_monthly_only_cols:
                     ym = df_scen.index.to_period('M')
                     df_scen[ls_monthly_only_cols] = (
@@ -247,9 +257,6 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
 
         df_all_plot = pd.concat(ls_scen_frames, ignore_index=True)
         df_all_plot = df_all_plot.sort_values(['Scenario', 'Date']).reset_index(drop=True)
-
-        days_in_month = df_all_plot['Date'].dt.days_in_month
-        durations = None
 
     b_diffs_flag = False
 
@@ -272,11 +279,6 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
     # check if no variables are selected
     if len(var_list) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
-
-    # to convert from cfs to taf or vice versa
-    if s_time_step == 'monthly':
-        cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
-        taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
     # WYT/SHASTABIN variable handling
     # Only one is ever supported, same as the original behavior: if more than one is selected, warn and keep only the first.
@@ -305,23 +307,9 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
             original_unit = None
 
         if original_unit == 'CFS':
-            if unit_choice == 'TAF':
-                if s_time_step == 'monthly':
-                    df_all_plot[var] = np.multiply(df_all_plot[var], cfs_taf)
-                else:
-                    ls_row_days = days_in_month if c_native_freq.get(var, 'monthly') == 'monthly' else 1
-                    row_cfs_taf = np.multiply(ls_row_days, (24 * 3600 / 43560 / 1000))
-                    df_all_plot[var] = np.multiply(df_all_plot[var], row_cfs_taf)
             c_var_units[var] = unit_choice
 
         elif original_unit == 'TAF':
-            if unit_choice == 'CFS':
-                if s_time_step == 'monthly':
-                    df_all_plot[var] = np.multiply(df_all_plot[var], taf_cfs)
-                else:
-                    ls_row_days = days_in_month if c_native_freq.get(var, 'monthly') == 'monthly' else 1
-                    row_taf_cfs = np.divide((43560 * 1000 / 24 / 3600), ls_row_days)
-                    df_all_plot[var] = np.multiply(df_all_plot[var], row_taf_cfs)
             c_var_units[var] = unit_choice
 
         # Temperature
