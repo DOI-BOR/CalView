@@ -208,7 +208,7 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
     cfs_taf_native = np.multiply(days_in_month_native, (24 * 3600 / 43560 / 1000))
     taf_cfs_native = np.divide((43560 * 1000 / 24 / 3600), days_in_month_native)
 
-    for var in var_list:git 
+    for var in var_list:
         try:
             original_unit = c_default_units[var].strip().upper()
         except:
