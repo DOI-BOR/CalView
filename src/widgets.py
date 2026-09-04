@@ -525,6 +525,8 @@ def create_widgets(scenario_names, c_field_list):
         End date picker widget
     ts_apply_button: obj
         Button that triggers the timeseries plot to update using the current widget selections (scenarios, variables, units, time step, dates)
+    full_period_button: obj
+        Button that resets date picket for ts plots to full record
     """
 
     # Select which alts to examine
@@ -568,6 +570,9 @@ def create_widgets(scenario_names, c_field_list):
     # Date range pickers
     start_date_picker = pn.widgets.DatePicker(name='Start Date', width=150)
     end_date_picker = pn.widgets.DatePicker(name='End Date', width=150)
+
+    # Date reset to full period of record
+    full_period_button = pn.widgets.Button(name='Full Period of Record', button_type='default', width=150)
 
     # Apply button - timeseries plot only updates when this is clicked
     ts_apply_button = pn.widgets.Button(name='Apply', button_type='primary', width=100)
@@ -652,7 +657,7 @@ def create_widgets(scenario_names, c_field_list):
     # Return all these widgets
     return (scen_selector, unit_selector, temp_unit_selector, period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year, bar_stat_sel, monthly_stat_sel,
             exceedance_show_year_check, exceedance_show_year_check_diffs,
-            time_step_selector, start_date_picker, end_date_picker, ts_apply_button
+            time_step_selector, start_date_picker, end_date_picker, ts_apply_button, full_period_button
             )
 
 
@@ -912,14 +917,35 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     for _ in range(len(module_column)):
         module_column.pop(0)
 
-    # Create the shared widgets
+    # Create the widgets
     (scen_selector, unit_selector, temp_unit_selector,period_selector, wyt_selector, wyt_period_selector, wyt_period_selector_year,
       bar_stat_sel, monthly_stat_sel, exceedance_show_year_check, exceedance_show_year_check_diffs,
-     time_step_selector, start_date_picker, end_date_picker, ts_apply_button) = create_widgets(scenario_names_combined, c_field_list_all)
+     time_step_selector, start_date_picker, end_date_picker, ts_apply_button, full_period_button) = create_widgets(scenario_names_combined, c_field_list_all)
+
+    # Only offer the Monthly/Daily choice if at least one field in the combined dataset is natively daily
+    b_have_daily_data = any(freq == 'daily' for freq in c_native_freq_all.values())
+    time_step_selector.visible = b_have_daily_data
+    if not b_have_daily_data:
+        time_step_selector.value = 'Monthly'
 
     # default the date pickers to the full range of the combined data
-    start_date_picker.value = df_all_data_combined['Date'].min().date()
-    end_date_picker.value = df_all_data_combined['Date'].max().date()
+    s_full_period_start = df_all_data_combined['Date'].min().date()
+    s_full_period_end = df_all_data_combined['Date'].max().date()
+
+    start_date_picker.value = s_full_period_start
+    end_date_picker.value = s_full_period_end
+
+    def reset_to_full_period(event):
+        """
+        Resets the timeseries date pickers back to the full period of record
+        for the combined data. Does not trigger a re-plot by itself -- the
+        person still needs to press Apply, consistent with how the other
+        timeseries widgets behave.
+        """
+        start_date_picker.value = s_full_period_start
+        end_date_picker.value = s_full_period_end
+
+    full_period_button.on_click(reset_to_full_period)
 
     def shrink_range_for_daily(event):
         """
@@ -1397,7 +1423,8 @@ def create_plots(event, module_results, module_column, header, tabs_row, c_modul
     timeseries_plots.append(pn.Column(
         ts_title,
         var_selector_ts,
-        pn.Row(time_step_selector, start_date_picker, end_date_picker, ts_apply_button),
+        pn.Row(time_step_selector, start_date_picker, end_date_picker, full_period_button),
+        ts_apply_button,
         bound_plot_ts
     ))
     make_diff_tabs(c_diff_plots['ts'], "Timeseries", timeseries_plots, c_modules)

@@ -12,11 +12,8 @@ if getattr(sys, 'frozen', False):
 
     os.environ['PATH'] = base_dir + os.pathsep + os.environ.get('PATH', '')
 
-    print(f"[hook-gdal-runtime] base_dir={base_dir}")
-
     try:
         import pyogrio._io
 
-        print("[hook-gdal-runtime] pyogrio._io imported successfully!")
     except Exception as e:
         print(f"[hook-gdal-runtime] pyogrio._io import FAILED: {type(e).__name__}: {e}")
