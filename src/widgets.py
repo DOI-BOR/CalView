@@ -756,7 +756,7 @@ def create_metadata(scenario_names, c_field_list, c_default_units, s_module, c_n
                         'FI ET': 'WBAs', 'GR ET': 'WBAs', 'ID ET': 'WBAs', 'OG ET': 'WBAs', 'OR ET': 'WBAs', 'PA ET': 'WBAs',
                         'PO ET': 'WBAs', 'RF ET': 'WBAs', 'RI ET': 'WBAs', 'RV ET': 'WBAs', 'SB ET': 'WBAs', 'SF ET': 'WBAs',
                         'SL ET': 'WBAs', 'SO ET': 'WBAs', 'TH ET': 'WBAs', 'TM ET': 'WBAs', 'TR ET': 'WBAs', 'UR ET': 'WBAs',
-                        'VI ET': 'WBAs', 'WL ET': 'WBAs', 'NV ET': 'WBAs', 'RefETO': 'WBAs'}
+                        'VI ET': 'WBAs', 'WL ET': 'WBAs', 'NV ET': 'WBAs', 'RefETO': 'WBAs', 'Precip': 'WBAs'}
         }
         if s_module in c_module_shapefiles:
             c_prefix_to_shapefile = c_module_shapefiles[s_module]
@@ -1887,13 +1887,16 @@ def update_run_names(event, file_picker_column, file_picker_col_tracker, run_nam
             elif s_module == 'hydro_in':
                 c_dss_paths = {
                     "et": '',
-                    "eto": ''
+                    "eto": '',
+                    "precip": ''
                 }
                 for s_file in os.listdir(files[file_index]):
                     s_curr_path = os.path.join(folders[file_index], s_file)
                     if os.path.isfile(s_curr_path):
                         if 'RefETo' in s_file or 'refeto' in s_file.lower():
                             c_dss_paths['eto'] = s_curr_path
+                        elif 'Precip' in s_file:
+                            c_dss_paths['precip'] = s_curr_path
                         elif 'ET' in s_file:
                             c_dss_paths['et'] = s_curr_path
 

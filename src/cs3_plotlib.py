@@ -2386,9 +2386,11 @@ def get_spatial_group(field, s_module):
         Spatial group name
     """
     if s_module == 'hydro_in':
+        if field.endswith('_REFETO'):
+            return 'RefETO'
+        if field.endswith('_PRECIP'):
+            return 'Precip'
         parts = field.split('_')
-        if len(parts) == 1:
-            return 'RefETO' #bare field looks like WBA02 from RefETO file
         return f'{parts[1]} ET' #returns AL ET for WBA02_AL_ET for example
     if s_module == 'hydro_out':
         if field.endswith(('_EXT', '_INT')):
