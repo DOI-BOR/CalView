@@ -149,7 +149,8 @@ def build_multi_unit_overlay(df_source, c_unit_to_cols, x='Date', hline_opts=Non
     return overlay
 
 
-def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, ls_comparison, c_field_list, temp_unit_choice='F'):
+def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, ls_comparison, c_field_list, temp_unit_choice='F',
+                c_native_freq=None, s_time_step='monthly', s_start_date=None, s_end_date=None):
     """
     Creates the timeseries plots
 
@@ -171,6 +172,14 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
         Dictionary of fields and descriptions
     temp_unit_choice: str
         Temperature unit selection ('F' or 'C')
+    c_native_freq: dict or None
+        Dictionary of each fields native time resolution
+    s_time_step: str
+        either monthly or daily determining the time step of the plots
+    s_start_date: str
+        If given, restricts the data to on/after this date
+    s_end_date: str
+        If given, restricts the data to on/before this date
 
     Returns
     -------
@@ -182,13 +191,76 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
     if df_all.empty:
         return pn.pane.Markdown("## No data to display")
 
-    df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
-    df_all_plot.reset_index(inplace=True, drop=False)
-    durations = [date.day for date in df_all_plot['Date']]
+    c_native_freq = c_native_freq or {}
+
+    # date range filter
+    df_all = df_all.copy()
+    if s_start_date is not None:
+        df_all = df_all[df_all['Date'] >= pd.Timestamp(s_start_date)]
+    if s_end_date is not None:
+        df_all = df_all[df_all['Date'] <= pd.Timestamp(s_end_date)]
+
+    if df_all.empty:
+        return pn.pane.Markdown("## No data to display")
+    # unit conversion
+    days_in_month_native = df_all['Date'].dt.days_in_month
+
+    cfs_taf_native = np.multiply(days_in_month_native, (24 * 3600 / 43560 / 1000))
+    taf_cfs_native = np.divide((43560 * 1000 / 24 / 3600), days_in_month_native)
+
+    for var in var_list:
+        try:
+            original_unit = c_default_units[var].strip().upper()
+        except:
+            original_unit = None
+
+        if original_unit == 'CFS' and unit_choice == 'TAF':
+            df_all[var] = np.multiply(df_all[var], cfs_taf_native)
+        elif original_unit == 'TAF' and unit_choice == 'CFS':
+            df_all[var] = np.multiply(df_all[var], taf_cfs_native)
+        # temperature/unitless/other units are NOT converted here
+
+    if s_time_step == 'monthly':
+        # resample the ALREADY-CONVERTED values
+        df_all_plot = df_all.groupby('Scenario').resample(rule='ME', on='Date').mean()
+        df_all_plot.reset_index(inplace=True, drop=False)
+    else:
+        # daily mode
+        ls_cols_to_expand = list(dict.fromkeys(
+            [v for v in var_list if v in df_all.columns]
+        ))
+
+        ls_scen_frames = []
+        for scenario, df_scen in df_all.groupby('Scenario'):
+            df_scen = df_scen.sort_values('Date').set_index('Date')
+
+            b_scen_is_monthly = df_scen.index.is_month_end.all()
+
+            if b_scen_is_monthly:
+                full_idx = pd.date_range(df_scen.index.min().replace(day=1), df_scen.index.max(), freq='D')
+                df_scen = df_scen.reindex(full_idx)
+                if ls_cols_to_expand:
+                    df_scen[ls_cols_to_expand] = df_scen[ls_cols_to_expand].ffill().bfill()
+                df_scen['Scenario'] = scenario
+            else:
+                ls_monthly_only_cols = [c for c in ls_cols_to_expand if
+                                        c_native_freq.get(c, 'monthly') == 'monthly']
+                if ls_monthly_only_cols:
+                    ym = df_scen.index.to_period('M')
+                    df_scen[ls_monthly_only_cols] = (
+                        df_scen.groupby(ym)[ls_monthly_only_cols].transform(lambda s: s.ffill().bfill())
+                    )
+
+            df_scen.index.name = 'Date'
+            df_scen.reset_index(inplace=True)
+            ls_scen_frames.append(df_scen)
+
+        df_all_plot = pd.concat(ls_scen_frames, ignore_index=True)
+        df_all_plot = df_all_plot.sort_values(['Scenario', 'Date']).reset_index(drop=True)
 
     b_diffs_flag = False
 
-    # # ensure comparison scen is at the end of the list so the coloring is constant with the differences plot for all modules
+    # ensure comparison scen is at the end of the list so the coloring is constant with the differences plot for all modules
     scenario_list = [scen for scen in scenario_list if scen not in ls_comparison] + \
                     [scen for scen in ls_comparison if scen in scenario_list]
     # check if none of the comparison scenarios are in the data frame
@@ -207,10 +279,6 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
     # check if no variables are selected
     if len(var_list) == 0:
         return pn.pane.Markdown('## Select variables above to display plot.')
-
-    # to convert from cfs to taf or vice versa
-    cfs_taf = np.multiply(durations, (24 * 3600 / 43560 / 1000))
-    taf_cfs = np.divide((43560 * 1000 / 24 / 3600), durations)
 
     # WYT/SHASTABIN variable handling
     # Only one is ever supported, same as the original behavior: if more than one is selected, warn and keep only the first.
@@ -239,13 +307,9 @@ def plot_values(scenario_list, var_list, unit_choice, df_all, c_default_units, l
             original_unit = None
 
         if original_unit == 'CFS':
-            if unit_choice == 'TAF':
-                df_all_plot[var] = np.multiply(df_all_plot[var], cfs_taf)
             c_var_units[var] = unit_choice
 
         elif original_unit == 'TAF':
-            if unit_choice == 'CFS':
-                df_all_plot[var] = np.multiply(df_all_plot[var], taf_cfs)
             c_var_units[var] = unit_choice
 
         # Temperature
@@ -2173,7 +2237,7 @@ def monthly_pattern(df_all, var_list, scenario_list, unit_choice,
 def plot_single_year(scenario_list, df_all, c_field_list, s_reservoir, i_year, temp_unit_choice='F'):
     """
     Creates the single-year operations, cold water profile, and temperature plots for
-    Shasta or Folsom
+    Shasta or Folsom - only for the temp module
 
     Parameters
     ----------
@@ -2322,9 +2386,11 @@ def get_spatial_group(field, s_module):
         Spatial group name
     """
     if s_module == 'hydro_in':
+        if field.endswith('_REFETO'):
+            return 'RefETO'
+        if field.endswith('_PRECIP'):
+            return 'Precip'
         parts = field.split('_')
-        if len(parts) == 1:
-            return 'RefETO' #bare field looks like WBA02 from RefETO file
         return f'{parts[1]} ET' #returns AL ET for WBA02_AL_ET for example
     if s_module == 'hydro_out':
         if field.endswith(('_EXT', '_INT')):

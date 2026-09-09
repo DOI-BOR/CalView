@@ -1,4 +1,3 @@
-WBA02	WBA 2 Reference ET
 WBA02_AL_ET	WBA 2 Alfalfa ET
 WBA02_AP_ET	WBA 2 Almonds and pistachios ET
 WBA02_CO_ET	WBA 2 Cotton ET
@@ -25,7 +24,6 @@ WBA02_TM_ET	WBA 2 Tomatoes (machine-picked) ET
 WBA02_TR_ET	WBA 2 Other truck ET
 WBA02_UR_ET	WBA 2 Urban ET
 WBA02_VI_ET	WBA 2 Vineyards ET
-WBA03	WBA 3 Reference ET
 WBA03_AL_ET	WBA 3 Alfalfa ET
 WBA03_AP_ET	WBA 3 Almonds and pistachios ET
 WBA03_CO_ET	WBA 3 Cotton ET
@@ -52,7 +50,6 @@ WBA03_TM_ET	WBA 3 Tomatoes (machine-picked) ET
 WBA03_TR_ET	WBA 3 Other truck ET
 WBA03_UR_ET	WBA 3 Urban ET
 WBA03_VI_ET	WBA 3 Vineyards ET
-WBA04	WBA 4 Reference ET
 WBA04_AL_ET	WBA 4 Alfalfa ET
 WBA04_AP_ET	WBA 4 Almonds and pistachios ET
 WBA04_CO_ET	WBA 4 Cotton ET
@@ -79,7 +76,6 @@ WBA04_TM_ET	WBA 4 Tomatoes (machine-picked) ET
 WBA04_TR_ET	WBA 4 Other truck ET
 WBA04_UR_ET	WBA 4 Urban ET
 WBA04_VI_ET	WBA 4 Vineyards ET
-WBA05	WBA 5 Reference ET
 WBA05_AL_ET	WBA 5 Alfalfa ET
 WBA05_AP_ET	WBA 5 Almonds and pistachios ET
 WBA05_CO_ET	WBA 5 Cotton ET
@@ -106,7 +102,6 @@ WBA05_TM_ET	WBA 5 Tomatoes (machine-picked) ET
 WBA05_TR_ET	WBA 5 Other truck ET
 WBA05_UR_ET	WBA 5 Urban ET
 WBA05_VI_ET	WBA 5 Vineyards ET
-WBA06	WBA 6 Reference ET
 WBA06_AL_ET	WBA 6 Alfalfa ET
 WBA06_AP_ET	WBA 6 Almonds and pistachios ET
 WBA06_CO_ET	WBA 6 Cotton ET
@@ -133,7 +128,6 @@ WBA06_TM_ET	WBA 6 Tomatoes (machine-picked) ET
 WBA06_TR_ET	WBA 6 Other truck ET
 WBA06_UR_ET	WBA 6 Urban ET
 WBA06_VI_ET	WBA 6 Vineyards ET
-WBA07N	WBA 7N Reference ET
 WBA07N_AL_ET	WBA 7N Alfalfa ET
 WBA07N_AP_ET	WBA 7N Almonds and pistachios ET
 WBA07N_CO_ET	WBA 7N Cotton ET
@@ -160,7 +154,6 @@ WBA07N_TM_ET	WBA 7N Tomatoes (machine-picked) ET
 WBA07N_TR_ET	WBA 7N Other truck ET
 WBA07N_UR_ET	WBA 7N Urban ET
 WBA07N_VI_ET	WBA 7N Vineyards ET
-WBA07S	WBA 7S Reference ET
 WBA07S_AL_ET	WBA 7S Alfalfa ET
 WBA07S_AP_ET	WBA 7S Almonds and pistachios ET
 WBA07S_CO_ET	WBA 7S Cotton ET
@@ -187,7 +180,6 @@ WBA07S_TM_ET	WBA 7S Tomatoes (machine-picked) ET
 WBA07S_TR_ET	WBA 7S Other truck ET
 WBA07S_UR_ET	WBA 7S Urban ET
 WBA07S_VI_ET	WBA 7S Vineyards ET
-WBA08N	WBA 8N Reference ET
 WBA08N_AL_ET	WBA 8N Alfalfa ET
 WBA08N_AP_ET	WBA 8N Almonds and pistachios ET
 WBA08N_CO_ET	WBA 8N Cotton ET
@@ -214,7 +206,6 @@ WBA08N_TM_ET	WBA 8N Tomatoes (machine-picked) ET
 WBA08N_TR_ET	WBA 8N Other truck ET
 WBA08N_UR_ET	WBA 8N Urban ET
 WBA08N_VI_ET	WBA 8N Vineyards ET
-WBA08S	WBA 8S Reference ET
 WBA08S_AL_ET	WBA 8S Alfalfa ET
 WBA08S_AP_ET	WBA 8S Almonds and pistachios ET
 WBA08S_CO_ET	WBA 8S Cotton ET
@@ -241,7 +232,6 @@ WBA08S_TM_ET	WBA 8S Tomatoes (machine-picked) ET
 WBA08S_TR_ET	WBA 8S Other truck ET
 WBA08S_UR_ET	WBA 8S Urban ET
 WBA08S_VI_ET	WBA 8S Vineyards ET
-WBA09	WBA 9 Reference ET
 WBA09_AL_ET	WBA 9 Alfalfa ET
 WBA09_AP_ET	WBA 9 Almonds and pistachios ET
 WBA09_CO_ET	WBA 9 Cotton ET
@@ -268,7 +258,6 @@ WBA09_TM_ET	WBA 9 Tomatoes (machine-picked) ET
 WBA09_TR_ET	WBA 9 Other truck ET
 WBA09_UR_ET	WBA 9 Urban ET
 WBA09_VI_ET	WBA 9 Vineyards ET
-WBA10	WBA 10 Reference ET
 WBA10_AL_ET	WBA 10 Alfalfa ET
 WBA10_AP_ET	WBA 10 Almonds and pistachios ET
 WBA10_CO_ET	WBA 10 Cotton ET
@@ -295,7 +284,6 @@ WBA10_TM_ET	WBA 10 Tomatoes (machine-picked) ET
 WBA10_TR_ET	WBA 10 Other truck ET
 WBA10_UR_ET	WBA 10 Urban ET
 WBA10_VI_ET	WBA 10 Vineyards ET
-WBA11	WBA 11 Reference ET
 WBA11_AL_ET	WBA 11 Alfalfa ET
 WBA11_AP_ET	WBA 11 Almonds and pistachios ET
 WBA11_CO_ET	WBA 11 Cotton ET
@@ -322,7 +310,6 @@ WBA11_TM_ET	WBA 11 Tomatoes (machine-picked) ET
 WBA11_TR_ET	WBA 11 Other truck ET
 WBA11_UR_ET	WBA 11 Urban ET
 WBA11_VI_ET	WBA 11 Vineyards ET
-WBA12	WBA 12 Reference ET
 WBA12_AL_ET	WBA 12 Alfalfa ET
 WBA12_AP_ET	WBA 12 Almonds and pistachios ET
 WBA12_CO_ET	WBA 12 Cotton ET
@@ -349,7 +336,6 @@ WBA12_TM_ET	WBA 12 Tomatoes (machine-picked) ET
 WBA12_TR_ET	WBA 12 Other truck ET
 WBA12_UR_ET	WBA 12 Urban ET
 WBA12_VI_ET	WBA 12 Vineyards ET
-WBA13	WBA 13 Reference ET
 WBA13_AL_ET	WBA 13 Alfalfa ET
 WBA13_AP_ET	WBA 13 Almonds and pistachios ET
 WBA13_CO_ET	WBA 13 Cotton ET
@@ -376,7 +362,6 @@ WBA13_TM_ET	WBA 13 Tomatoes (machine-picked) ET
 WBA13_TR_ET	WBA 13 Other truck ET
 WBA13_UR_ET	WBA 13 Urban ET
 WBA13_VI_ET	WBA 13 Vineyards ET
-WBA14	WBA 14 Reference ET
 WBA14_AL_ET	WBA 14 Alfalfa ET
 WBA14_AP_ET	WBA 14 Almonds and pistachios ET
 WBA14_CO_ET	WBA 14 Cotton ET
@@ -403,7 +388,6 @@ WBA14_TM_ET	WBA 14 Tomatoes (machine-picked) ET
 WBA14_TR_ET	WBA 14 Other truck ET
 WBA14_UR_ET	WBA 14 Urban ET
 WBA14_VI_ET	WBA 14 Vineyards ET
-WBA15N	WBA 15N Reference ET
 WBA15N_AL_ET	WBA 15N Alfalfa ET
 WBA15N_AP_ET	WBA 15N Almonds and pistachios ET
 WBA15N_CO_ET	WBA 15N Cotton ET
@@ -430,7 +414,6 @@ WBA15N_TM_ET	WBA 15N Tomatoes (machine-picked) ET
 WBA15N_TR_ET	WBA 15N Other truck ET
 WBA15N_UR_ET	WBA 15N Urban ET
 WBA15N_VI_ET	WBA 15N Vineyards ET
-WBA15S	WBA 15S Reference ET
 WBA15S_AL_ET	WBA 15S Alfalfa ET
 WBA15S_AP_ET	WBA 15S Almonds and pistachios ET
 WBA15S_CO_ET	WBA 15S Cotton ET
@@ -457,7 +440,6 @@ WBA15S_TM_ET	WBA 15S Tomatoes (machine-picked) ET
 WBA15S_TR_ET	WBA 15S Other truck ET
 WBA15S_UR_ET	WBA 15S Urban ET
 WBA15S_VI_ET	WBA 15S Vineyards ET
-WBA16	WBA 16 Reference ET
 WBA16_AL_ET	WBA 16 Alfalfa ET
 WBA16_AP_ET	WBA 16 Almonds and pistachios ET
 WBA16_CO_ET	WBA 16 Cotton ET
@@ -484,7 +466,6 @@ WBA16_TM_ET	WBA 16 Tomatoes (machine-picked) ET
 WBA16_TR_ET	WBA 16 Other truck ET
 WBA16_UR_ET	WBA 16 Urban ET
 WBA16_VI_ET	WBA 16 Vineyards ET
-WBA17N	WBA 17N Reference ET
 WBA17N_AL_ET	WBA 17N Alfalfa ET
 WBA17N_AP_ET	WBA 17N Almonds and pistachios ET
 WBA17N_CO_ET	WBA 17N Cotton ET
@@ -511,7 +492,6 @@ WBA17N_TM_ET	WBA 17N Tomatoes (machine-picked) ET
 WBA17N_TR_ET	WBA 17N Other truck ET
 WBA17N_UR_ET	WBA 17N Urban ET
 WBA17N_VI_ET	WBA 17N Vineyards ET
-WBA17S	WBA 17S Reference ET
 WBA17S_AL_ET	WBA 17S Alfalfa ET
 WBA17S_AP_ET	WBA 17S Almonds and pistachios ET
 WBA17S_CO_ET	WBA 17S Cotton ET
@@ -538,7 +518,6 @@ WBA17S_TM_ET	WBA 17S Tomatoes (machine-picked) ET
 WBA17S_TR_ET	WBA 17S Other truck ET
 WBA17S_UR_ET	WBA 17S Urban ET
 WBA17S_VI_ET	WBA 17S Vineyards ET
-WBA18	WBA 18 Reference ET
 WBA18_AL_ET	WBA 18 Alfalfa ET
 WBA18_AP_ET	WBA 18 Almonds and pistachios ET
 WBA18_CO_ET	WBA 18 Cotton ET
@@ -565,7 +544,6 @@ WBA18_TM_ET	WBA 18 Tomatoes (machine-picked) ET
 WBA18_TR_ET	WBA 18 Other truck ET
 WBA18_UR_ET	WBA 18 Urban ET
 WBA18_VI_ET	WBA 18 Vineyards ET
-WBA19	WBA 19 Reference ET
 WBA19_AL_ET	WBA 19 Alfalfa ET
 WBA19_AP_ET	WBA 19 Almonds and pistachios ET
 WBA19_CO_ET	WBA 19 Cotton ET
@@ -592,7 +570,6 @@ WBA19_TM_ET	WBA 19 Tomatoes (machine-picked) ET
 WBA19_TR_ET	WBA 19 Other truck ET
 WBA19_UR_ET	WBA 19 Urban ET
 WBA19_VI_ET	WBA 19 Vineyards ET
-WBA20	WBA 20 Reference ET
 WBA20_AL_ET	WBA 20 Alfalfa ET
 WBA20_AP_ET	WBA 20 Almonds and pistachios ET
 WBA20_CO_ET	WBA 20 Cotton ET
@@ -619,7 +596,6 @@ WBA20_TM_ET	WBA 20 Tomatoes (machine-picked) ET
 WBA20_TR_ET	WBA 20 Other truck ET
 WBA20_UR_ET	WBA 20 Urban ET
 WBA20_VI_ET	WBA 20 Vineyards ET
-WBA21	WBA 21 Reference ET
 WBA21_AL_ET	WBA 21 Alfalfa ET
 WBA21_AP_ET	WBA 21 Almonds and pistachios ET
 WBA21_CO_ET	WBA 21 Cotton ET
@@ -646,7 +622,6 @@ WBA21_TM_ET	WBA 21 Tomatoes (machine-picked) ET
 WBA21_TR_ET	WBA 21 Other truck ET
 WBA21_UR_ET	WBA 21 Urban ET
 WBA21_VI_ET	WBA 21 Vineyards ET
-WBA22	WBA 22 Reference ET
 WBA22_AL_ET	WBA 22 Alfalfa ET
 WBA22_AP_ET	WBA 22 Almonds and pistachios ET
 WBA22_CO_ET	WBA 22 Cotton ET
@@ -673,7 +648,6 @@ WBA22_TM_ET	WBA 22 Tomatoes (machine-picked) ET
 WBA22_TR_ET	WBA 22 Other truck ET
 WBA22_UR_ET	WBA 22 Urban ET
 WBA22_VI_ET	WBA 22 Vineyards ET
-WBA23	WBA 23 Reference ET
 WBA23_AL_ET	WBA 23 Alfalfa ET
 WBA23_AP_ET	WBA 23 Almonds and pistachios ET
 WBA23_CO_ET	WBA 23 Cotton ET
@@ -700,7 +674,6 @@ WBA23_TM_ET	WBA 23 Tomatoes (machine-picked) ET
 WBA23_TR_ET	WBA 23 Other truck ET
 WBA23_UR_ET	WBA 23 Urban ET
 WBA23_VI_ET	WBA 23 Vineyards ET
-WBA24	WBA 24 Reference ET
 WBA24_AL_ET	WBA 24 Alfalfa ET
 WBA24_AP_ET	WBA 24 Almonds and pistachios ET
 WBA24_CO_ET	WBA 24 Cotton ET
@@ -727,7 +700,6 @@ WBA24_TM_ET	WBA 24 Tomatoes (machine-picked) ET
 WBA24_TR_ET	WBA 24 Other truck ET
 WBA24_UR_ET	WBA 24 Urban ET
 WBA24_VI_ET	WBA 24 Vineyards ET
-WBA25	WBA 25 Reference ET
 WBA25_AL_ET	WBA 25 Alfalfa ET
 WBA25_AP_ET	WBA 25 Almonds and pistachios ET
 WBA25_CO_ET	WBA 25 Cotton ET
@@ -754,7 +726,6 @@ WBA25_TM_ET	WBA 25 Tomatoes (machine-picked) ET
 WBA25_TR_ET	WBA 25 Other truck ET
 WBA25_UR_ET	WBA 25 Urban ET
 WBA25_VI_ET	WBA 25 Vineyards ET
-WBA26N	WBA 26N Reference ET
 WBA26N_AL_ET	WBA 26N Alfalfa ET
 WBA26N_AP_ET	WBA 26N Almonds and pistachios ET
 WBA26N_CO_ET	WBA 26N Cotton ET
@@ -781,7 +752,6 @@ WBA26N_TM_ET	WBA 26N Tomatoes (machine-picked) ET
 WBA26N_TR_ET	WBA 26N Other truck ET
 WBA26N_UR_ET	WBA 26N Urban ET
 WBA26N_VI_ET	WBA 26N Vineyards ET
-WBA26S	WBA 26S Reference ET
 WBA26S_AL_ET	WBA 26S Alfalfa ET
 WBA26S_AP_ET	WBA 26S Almonds and pistachios ET
 WBA26S_CO_ET	WBA 26S Cotton ET
@@ -808,7 +778,6 @@ WBA26S_TM_ET	WBA 26S Tomatoes (machine-picked) ET
 WBA26S_TR_ET	WBA 26S Other truck ET
 WBA26S_UR_ET	WBA 26S Urban ET
 WBA26S_VI_ET	WBA 26S Vineyards ET
-WBA50	WBA 50 Reference ET
 WBA50_AL_ET	WBA 50 Alfalfa ET
 WBA50_AP_ET	WBA 50 Almonds and pistachios ET
 WBA50_CO_ET	WBA 50 Cotton ET
@@ -835,7 +804,6 @@ WBA50_TM_ET	WBA 50 Tomatoes (machine-picked) ET
 WBA50_TR_ET	WBA 50 Other truck ET
 WBA50_UR_ET	WBA 50 Urban ET
 WBA50_VI_ET	WBA 50 Vineyards ET
-WBA60N	WBA 60N Reference ET
 WBA60N_AL_ET	WBA 60N Alfalfa ET
 WBA60N_AP_ET	WBA 60N Almonds and pistachios ET
 WBA60N_CO_ET	WBA 60N Cotton ET
@@ -862,7 +830,6 @@ WBA60N_TM_ET	WBA 60N Tomatoes (machine-picked) ET
 WBA60N_TR_ET	WBA 60N Other truck ET
 WBA60N_UR_ET	WBA 60N Urban ET
 WBA60N_VI_ET	WBA 60N Vineyards ET
-WBA60S	WBA 60S Reference ET
 WBA60S_AL_ET	WBA 60S Alfalfa ET
 WBA60S_AP_ET	WBA 60S Almonds and pistachios ET
 WBA60S_CO_ET	WBA 60S Cotton ET
@@ -889,7 +856,6 @@ WBA60S_TM_ET	WBA 60S Tomatoes (machine-picked) ET
 WBA60S_TR_ET	WBA 60S Other truck ET
 WBA60S_UR_ET	WBA 60S Urban ET
 WBA60S_VI_ET	WBA 60S Vineyards ET
-WBA61	WBA 61 Reference ET
 WBA61_AL_ET	WBA 61 Alfalfa ET
 WBA61_AP_ET	WBA 61 Almonds and pistachios ET
 WBA61_CO_ET	WBA 61 Cotton ET
@@ -916,7 +882,6 @@ WBA61_TM_ET	WBA 61 Tomatoes (machine-picked) ET
 WBA61_TR_ET	WBA 61 Other truck ET
 WBA61_UR_ET	WBA 61 Urban ET
 WBA61_VI_ET	WBA 61 Vineyards ET
-WBA62	WBA 62 Reference ET
 WBA62_AL_ET	WBA 62 Alfalfa ET
 WBA62_AP_ET	WBA 62 Almonds and pistachios ET
 WBA62_CO_ET	WBA 62 Cotton ET
@@ -943,7 +908,6 @@ WBA62_TM_ET	WBA 62 Tomatoes (machine-picked) ET
 WBA62_TR_ET	WBA 62 Other truck ET
 WBA62_UR_ET	WBA 62 Urban ET
 WBA62_VI_ET	WBA 62 Vineyards ET
-WBA63	WBA 63 Reference ET
 WBA63_AL_ET	WBA 63 Alfalfa ET
 WBA63_AP_ET	WBA 63 Almonds and pistachios ET
 WBA63_CO_ET	WBA 63 Cotton ET
@@ -970,7 +934,6 @@ WBA63_TM_ET	WBA 63 Tomatoes (machine-picked) ET
 WBA63_TR_ET	WBA 63 Other truck ET
 WBA63_UR_ET	WBA 63 Urban ET
 WBA63_VI_ET	WBA 63 Vineyards ET
-WBA64	WBA 64 Reference ET
 WBA64_AL_ET	WBA 64 Alfalfa ET
 WBA64_AP_ET	WBA 64 Almonds and pistachios ET
 WBA64_CO_ET	WBA 64 Cotton ET
@@ -997,7 +960,6 @@ WBA64_TM_ET	WBA 64 Tomatoes (machine-picked) ET
 WBA64_TR_ET	WBA 64 Other truck ET
 WBA64_UR_ET	WBA 64 Urban ET
 WBA64_VI_ET	WBA 64 Vineyards ET
-WBA71	WBA 71 Reference ET
 WBA71_AL_ET	WBA 71 Alfalfa ET
 WBA71_AP_ET	WBA 71 Almonds and pistachios ET
 WBA71_CO_ET	WBA 71 Cotton ET
@@ -1024,7 +986,6 @@ WBA71_TM_ET	WBA 71 Tomatoes (machine-picked) ET
 WBA71_TR_ET	WBA 71 Other truck ET
 WBA71_UR_ET	WBA 71 Urban ET
 WBA71_VI_ET	WBA 71 Vineyards ET
-WBA72	WBA 72 Reference ET
 WBA72_AL_ET	WBA 72 Alfalfa ET
 WBA72_AP_ET	WBA 72 Almonds and pistachios ET
 WBA72_CO_ET	WBA 72 Cotton ET
@@ -1051,7 +1012,6 @@ WBA72_TM_ET	WBA 72 Tomatoes (machine-picked) ET
 WBA72_TR_ET	WBA 72 Other truck ET
 WBA72_UR_ET	WBA 72 Urban ET
 WBA72_VI_ET	WBA 72 Vineyards ET
-WBA73	WBA 73 Reference ET
 WBA73_AL_ET	WBA 73 Alfalfa ET
 WBA73_AP_ET	WBA 73 Almonds and pistachios ET
 WBA73_CO_ET	WBA 73 Cotton ET
@@ -1078,7 +1038,6 @@ WBA73_TM_ET	WBA 73 Tomatoes (machine-picked) ET
 WBA73_TR_ET	WBA 73 Other truck ET
 WBA73_UR_ET	WBA 73 Urban ET
 WBA73_VI_ET	WBA 73 Vineyards ET
-WBA90	WBA 90 Reference ET
 WBA90_AL_ET	WBA 90 Alfalfa ET
 WBA90_AP_ET	WBA 90 Almonds and pistachios ET
 WBA90_CO_ET	WBA 90 Cotton ET
@@ -1105,7 +1064,6 @@ WBA90_TM_ET	WBA 90 Tomatoes (machine-picked) ET
 WBA90_TR_ET	WBA 90 Other truck ET
 WBA90_UR_ET	WBA 90 Urban ET
 WBA90_VI_ET	WBA 90 Vineyards ET
-WBA91	WBA 91 Reference ET
 WBA91_AL_ET	WBA 91 Alfalfa ET
 WBA91_AP_ET	WBA 91 Almonds and pistachios ET
 WBA91_CO_ET	WBA 91 Cotton ET
@@ -1132,3 +1090,87 @@ WBA91_TM_ET	WBA 91 Tomatoes (machine-picked) ET
 WBA91_TR_ET	WBA 91 Other truck ET
 WBA91_UR_ET	WBA 91 Urban ET
 WBA91_VI_ET	WBA 91 Vineyards ET
+WBA02_REFETO	WBA 2 Reference ET
+WBA03_REFETO	WBA 3 Reference ET
+WBA04_REFETO	WBA 4 Reference ET
+WBA05_REFETO	WBA 5 Reference ET
+WBA06_REFETO	WBA 6 Reference ET
+WBA07N_REFETO	WBA 7N Reference ET
+WBA07S_REFETO	WBA 7S Reference ET
+WBA08N_REFETO	WBA 8N Reference ET
+WBA08S_REFETO	WBA 8S Reference ET
+WBA09_REFETO	WBA 9 Reference ET
+WBA10_REFETO	WBA 10 Reference ET
+WBA11_REFETO	WBA 11 Reference ET
+WBA12_REFETO	WBA 12 Reference ET
+WBA13_REFETO	WBA 13 Reference ET
+WBA14_REFETO	WBA 14 Reference ET
+WBA15N_REFETO	WBA 15N Reference ET
+WBA15S_REFETO	WBA 15S Reference ET
+WBA16_REFETO	WBA 16 Reference ET
+WBA17N_REFETO	WBA 17N Reference ET
+WBA17S_REFETO	WBA 17S Reference ET
+WBA18_REFETO	WBA 18 Reference ET
+WBA19_REFETO	WBA 19 Reference ET
+WBA20_REFETO	WBA 20 Reference ET
+WBA21_REFETO	WBA 21 Reference ET
+WBA22_REFETO	WBA 22 Reference ET
+WBA23_REFETO	WBA 23 Reference ET
+WBA24_REFETO	WBA 24 Reference ET
+WBA25_REFETO	WBA 25 Reference ET
+WBA26N_REFETO	WBA 26N Reference ET
+WBA26S_REFETO	WBA 26S Reference ET
+WBA50_REFETO	WBA 50 Reference ET
+WBA60N_REFETO	WBA 60N Reference ET
+WBA60S_REFETO	WBA 60S Reference ET
+WBA61_REFETO	WBA 61 Reference ET
+WBA62_REFETO	WBA 62 Reference ET
+WBA63_REFETO	WBA 63 Reference ET
+WBA64_REFETO	WBA 64 Reference ET
+WBA71_REFETO	WBA 71 Reference ET
+WBA72_REFETO	WBA 72 Reference ET
+WBA73_REFETO	WBA 73 Reference ET
+WBA90_REFETO	WBA 90 Reference ET
+WBA91_REFETO	WBA 91 Reference ET
+WBA02_PRECIP	WBA 2 Precipitation
+WBA03_PRECIP	WBA 3 Precipitation
+WBA04_PRECIP	WBA 4 Precipitation
+WBA05_PRECIP	WBA 5 Precipitation
+WBA06_PRECIP	WBA 6 Precipitation
+WBA07N_PRECIP	WBA 7N Precipitation
+WBA07S_PRECIP	WBA 7S Precipitation
+WBA08N_PRECIP	WBA 8N Precipitation
+WBA08S_PRECIP	WBA 8S Precipitation
+WBA09_PRECIP	WBA 9 Precipitation
+WBA10_PRECIP	WBA 10 Precipitation
+WBA11_PRECIP	WBA 11 Precipitation
+WBA12_PRECIP	WBA 12 Precipitation
+WBA13_PRECIP	WBA 13 Precipitation
+WBA14_PRECIP	WBA 14 Precipitation
+WBA15N_PRECIP	WBA 15N Precipitation
+WBA15S_PRECIP	WBA 15S Precipitation
+WBA16_PRECIP	WBA 16 Precipitation
+WBA17N_PRECIP	WBA 17N Precipitation
+WBA17S_PRECIP	WBA 17S Precipitation
+WBA18_PRECIP	WBA 18 Precipitation
+WBA19_PRECIP	WBA 19 Precipitation
+WBA20_PRECIP	WBA 20 Precipitation
+WBA21_PRECIP	WBA 21 Precipitation
+WBA22_PRECIP	WBA 22 Precipitation
+WBA23_PRECIP	WBA 23 Precipitation
+WBA24_PRECIP	WBA 24 Precipitation
+WBA25_PRECIP	WBA 25 Precipitation
+WBA26N_PRECIP	WBA 26N Precipitation
+WBA26S_PRECIP	WBA 26S Precipitation
+WBA50_PRECIP	WBA 50 Precipitation
+WBA60N_PRECIP	WBA 60N Precipitation
+WBA60S_PRECIP	WBA 60S Precipitation
+WBA61_PRECIP	WBA 61 Precipitation
+WBA62_PRECIP	WBA 62 Precipitation
+WBA63_PRECIP	WBA 63 Precipitation
+WBA64_PRECIP	WBA 64 Precipitation
+WBA71_PRECIP	WBA 71 Precipitation
+WBA72_PRECIP	WBA 72 Precipitation
+WBA73_PRECIP	WBA 73 Precipitation
+WBA90_PRECIP	WBA 90 Precipitation
+WBA91_PRECIP	WBA 91 Precipitation

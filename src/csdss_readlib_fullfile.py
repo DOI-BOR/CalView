@@ -62,12 +62,15 @@ def get_shapefile(s_shapefile_name):
     Loads a shapefile by name and returns a cleand GeoDataFrame with just ID column and geometry, reprojected to lat/lon for spatial plots.
     Parameters
     ----------
-    s_shapefile_name: str (name of the shapefile to load as stored in the field metadata)
+    s_shapefile_name: str
+        name of the shapefile to load as stored in the field metadata
 
     Returns
     -------
-    o_gdf: GeoDataFrame (ID column + 'geometry')
-    s_id_col: str (name of the ID column, for merging)
+    o_gdf: GeoDataFrame
+        ID column + 'geometry'
+    s_id_col: str
+        name of the ID column, for merging
     """
     c_shapefile_id_cols = {
         'WBAs': 'WBA_ID',
@@ -91,7 +94,7 @@ def get_shapefile(s_shapefile_name):
     o_gdf = o_gdf[[s_id_col, 'geometry']].to_crs(4326)
     return o_gdf, s_id_col
 
-def pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module):
+def pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module, c_native_freq):
     """
     Creates a single pickle file of DSS data per module
 
@@ -107,6 +110,8 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module
         Dictionary of fields and descriptions
     s_module: str
         Key from c_flag of module type (ex 'calsim')
+    c_native_freq:dict
+        Dictionary of fields and native frequencies
     Returns
     -------
     none
@@ -138,10 +143,12 @@ def pickler(append_list, baseline_stack, c_default_units, c_field_list, s_module
 
     #bundle everything into one dict
     c_module_data = {
+        'module': s_module,
         'values': df_all_data,
         'diffs': df_diffs,
         'units': c_default_units,
-        'fields': c_field_list
+        'fields': c_field_list,
+        'freq':c_native_freq or {}
     }
 
     pickled_module = open(path.abspath(f"module_{s_module}.pkl"), "wb")
@@ -169,6 +176,8 @@ def load_pickles(ls_files, s_module):
         Dictionary of default units for each field
     c_field_list: dict
         Dictionary of fields and descriptions
+    c_native_frec: dict
+        Dictionary of fields and native frequencies
     """
     if not ls_files:
         s_module_path = path.abspath(f"module_{s_module}.pkl")
@@ -176,25 +185,39 @@ def load_pickles(ls_files, s_module):
         #ls_files should contain exactly one file: the module pickle
         s_module_path = ls_files[0]
 
+    #filename check - module name must appear somewhere in the filename but extra text is fine
+    s_filename = path.basename(s_module_path)
+    if s_module.lower() not in s_filename.lower():
+        print(f'Selected file "{s_filename}" does not appear to be a "{s_module}" pickle. Please select the correct file.')
+        return None, None, None, None, None
+
     try:
         load_module = open(s_module_path, 'rb')
         c_module_data = pickle.load(load_module)
         load_module.close()
+
+        #module check - catches renamed files the filename check would miss, skip for older pickles that dont have the key
+        s_stored_module = c_module_data.get('module')
+        if s_stored_module is not None and s_stored_module != s_module:
+            s_error = f'File "{s_filename}" contains data for module "{s_stored_module}", not "{s_module}". Please select the correct file.'
+            print(s_error)
+            return None, None, None, None, None
         df_all_data = c_module_data['values']
         df_diffs = c_module_data['diffs']
         c_default_units = c_module_data['units']
         c_field_list = c_module_data['fields']
+        c_native_freq = c_module_data.get('freq', {})
     except FileNotFoundError:
         print(f'Missing "module_{s_module}.pkl". Please run pickler')
-        return None, None, None, None
+        return None, None, None, None, None
     except (KeyError, pickle.UnpicklingError) as e:
         print(f'Pickle file for module "{s_module}" is malformed or from an older version: {e}')
-        return None, None, None, None
+        return None, None, None, None, None
 
-    return (df_all_data, df_diffs, c_default_units, c_field_list)
+    return (df_all_data, df_diffs, c_default_units, c_field_list, c_native_freq)
 
 
-def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
+def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module, s_native_freq='monthly'):
     """
     Reads in a single DSS file
 
@@ -208,6 +231,8 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
         Name for this scenario
     s_module: str
         Key from c_flag of module type (ex 'calsim')
+    s_native_freq: str
+        Native time resolution of every field pulled from this file
 
     Returns
     -------
@@ -217,6 +242,8 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
         Dictionary with the fields that were actually pulled
     c_default_units: dict
         Dictionary of default units for each field
+    c_native_freq: dict
+        Dictionary of {field: s_native_freq} for every field actually pulled
     """
 
     fid = HecDss.Open(dss_file)
@@ -253,6 +280,8 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
 
     # to hold the units
     c_default_units = {}
+    # to hold native frequency
+    c_native_freq = {}
 
     for b_part in c_target_ts_list.keys():
         try:
@@ -280,11 +309,18 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
                 f_part = dfPaths[dfPaths['B'] == b_part]['F'].iloc[0]
                 target_pathName = f'/{a_part}/{b_part.upper()}/{c_part}//1MON/{f_part}/'
             elif s_module == 'hydro_in':
-                c_part = dfPaths[dfPaths['B'] == b_part]['C'].iloc[0]
-                a_part = dfPaths[dfPaths['B'] == b_part]['A'].iloc[0]
-                e_part = dfPaths[dfPaths['B'] == b_part]['E'].iloc[0]
-                f_part = dfPaths[dfPaths['B'] == b_part]['F'].iloc[0]
-                b_part_original = dfPaths[dfPaths['B'] == b_part]['B_original'].iloc[0]
+                # remove suffixes that differentiate between precip and refeto files for lookup
+                if b_part.endswith('_REFETO'):
+                    b_part_lookup = b_part[:-len('_REFETO')]
+                elif b_part.endswith('_PRECIP'):
+                    b_part_lookup = b_part[:-len('_PRECIP')]
+                else:
+                    b_part_lookup = b_part
+                c_part = dfPaths[dfPaths['B'] == b_part_lookup]['C'].iloc[0]
+                a_part = dfPaths[dfPaths['B'] == b_part_lookup]['A'].iloc[0]
+                e_part = dfPaths[dfPaths['B'] == b_part_lookup]['E'].iloc[0]
+                f_part = dfPaths[dfPaths['B'] == b_part_lookup]['F'].iloc[0]
+                b_part_original = dfPaths[dfPaths['B'] == b_part_lookup]['B_original'].iloc[0]
                 target_pathName = f'/{a_part}/{b_part_original}/{c_part}//{e_part}/{f_part}/'
 
 
@@ -293,6 +329,9 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
 
             # add in units
             c_default_units[b_part] = working_ts.data_units
+
+            # record the native frequency for this field, as told by the caller
+            c_native_freq[b_part] = s_native_freq
 
             # add it to full dataframe
             ol_times = [o_time.datetime() for o_time in working_ts.times]
@@ -318,16 +357,18 @@ def single_file_pull(dss_file, c_target_ts_list, scenario_name, s_module):
         else:
             warnings.warn(f'No fields from field list found in {dss_file}')
 
-    return df_ts, c_target_ts_list_final, c_default_units
+    return df_ts, c_target_ts_list_final, c_default_units, c_native_freq
 
 
 def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
     """
-    reads in the list of runs. can be multiproccessing or not by changing multiprocess to True.
+    reads in the list of runs.
     Parameters
     ----------
     runs: list
-        list of runs and run names in the form [["Description_1", ("File_1.dss")], ...] or [["Description_1", {'calsim': '...', ...}], ...]
+        list of runs and run names in the form [["Description_1", "File_1.dss"], ...] (single-file modules, e.g. 'calsim'/'hydro_out') or
+        [["Description_1", {'calsim': '...', ...}], ...] (multi-file modules, e.g. 'temperature'/'salinity'/'hydro_in', where the dict keys are the
+        expected file roles for that module)
     c_field_list: dict
         dictionary of fields and descriptions {field: description, ...}
     s_comparison: str
@@ -339,16 +380,19 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
     -------
     append_list: list
         list of the dataframes of each run
-    baseline_stack:
+    baseline_stack: list
         a list of dataframes of the comparison scenerio as many times as there are runs
     c_default_units: dict
         dictionary of the default units for each field
     c_field_list_final: dict
         dictionary of the final version of c_field_list
+    c_native_freq: dict
+        Dictionary of {field: 'daily' or 'monthly'} - each field's native time resolution based on which source/file it came from
 
     """
     results = {}
     c_default_units_all = {}
+    c_native_freq_all = {}
     if s_module in ('calsim', 'salinity', 'hydro_out', 'hydro_in'):
         c_field_list_final = c_field_list.copy()
     elif s_module == 'temperature':
@@ -363,8 +407,8 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
             print('Working on', run[0])
 
             if s_module == 'calsim':
-                df_all_data, c_target_ts_list, c_default_units = \
-                    single_file_pull(run[1], c_field_list, run[0], s_module)
+                df_all_data, c_target_ts_list, c_default_units, c_native_freq = \
+                    single_file_pull(run[1], c_field_list, run[0], s_module, s_native_freq='monthly') #calsim output is always monthly
 
                 # Since these are all monthly, we can drop any rows with nans and only keep rows with all the data
                 df_all_data.dropna(how='any', inplace=True)
@@ -388,20 +432,21 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
 
                 # add into dictionary to store
                 c_default_units_all.update(c_default_units)
+                c_native_freq_all.update(c_native_freq)
                 results[run[0]] = df_all_data
 
             elif s_module == 'temperature':
                 # run[0] will be name and run[1] will be the dictionary
 
-                # from calsim, we only care about shatabin or wyts
-                df_calsim_SV_result, c_calsim_SV_target_ts_list, c_calsim_SV_default_units = single_file_pull(run[1]['calsim_SV'], c_calsim_fields, run[0], s_module)
-                df_calsim_DV_result, c_calsim_DV_target_ts_list, c_calsim_DV_default_units = single_file_pull(run[1]['calsim_DV'], c_calsim_fields, run[0], s_module)
+                # from calsim, we only care about shatabin or wyts - calsim outputs are monthly
+                df_calsim_SV_result, c_calsim_SV_target_ts_list, c_calsim_SV_default_units, c_calsim_SV_native_freq = single_file_pull(run[1]['calsim_SV'], c_calsim_fields, run[0], s_module, s_native_freq='monthly')
+                df_calsim_DV_result, c_calsim_DV_target_ts_list, c_calsim_DV_default_units, c_calsim_DV_native_freq = single_file_pull(run[1]['calsim_DV'], c_calsim_fields, run[0], s_module, s_native_freq='monthly')
 
-                # everything else we will try to pull from the other files
-                df_SR_WQ_result, c_SR_WQ_target_ts_list, c_SR_WQ_default_units = single_file_pull(run[1]['SR_WQ_Report'], c_hec5q_fields, run[0], s_module)
-                df_AR_WQ_result, c_AR_WQ_target_ts_list, c_AR_WQ_default_units = single_file_pull(run[1]['AR_WQ_Report'], c_hec5q_fields, run[0], s_module)
-                df_s_CALSIMII_result, c_s_CALSIMII_target_ts_list, c_s_CALSIMII_default_units = single_file_pull(run[1]['s_CALSIMII_HEC5Q'], c_hec5q_fields, run[0], s_module)
-                df_a_CALSIMII_result, c_a_CALSIMII_target_ts_list, c_a_CALSIMII_default_units = single_file_pull(run[1]['a_CALSIMII_HEC5Q'], c_hec5q_fields, run[0], s_module)
+                # everything else we will try to pull from the other files - daily timesteps
+                df_SR_WQ_result, c_SR_WQ_target_ts_list, c_SR_WQ_default_units, c_SR_WQ_native_freq = single_file_pull(run[1]['SR_WQ_Report'], c_hec5q_fields, run[0], s_module, s_native_freq='daily')
+                df_AR_WQ_result, c_AR_WQ_target_ts_list, c_AR_WQ_default_units, c_AR_WQ_native_freq = single_file_pull(run[1]['AR_WQ_Report'], c_hec5q_fields, run[0], s_module, s_native_freq='daily')
+                df_s_CALSIMII_result, c_s_CALSIMII_target_ts_list, c_s_CALSIMII_default_units, c_s_CALSIMII_native_freq = single_file_pull(run[1]['s_CALSIMII_HEC5Q'], c_hec5q_fields, run[0], s_module, s_native_freq='daily')
+                df_a_CALSIMII_result, c_a_CALSIMII_target_ts_list, c_a_CALSIMII_default_units, c_a_CALSIMII_native_freq = single_file_pull(run[1]['a_CALSIMII_HEC5Q'], c_hec5q_fields, run[0], s_module, s_native_freq='daily')
 
                 o_field_counts = Counter(c_SR_WQ_target_ts_list.keys())
                 o_field_counts.update(c_AR_WQ_target_ts_list.keys())
@@ -422,6 +467,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                         c_SR_WQ_target_ts_list.pop(field)
                         c_SR_WQ_default_units[s_new_field] = c_SR_WQ_default_units[field]
                         c_SR_WQ_default_units.pop(field)
+                        c_SR_WQ_native_freq[s_new_field] = c_SR_WQ_native_freq.pop(field)
                     if field in c_AR_WQ_target_ts_list:
                         # what we will rename to
                         s_new_field = field + ' AR'
@@ -434,6 +480,8 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                         c_AR_WQ_target_ts_list.pop(field)
                         c_AR_WQ_default_units[s_new_field] = c_AR_WQ_default_units[field]
                         c_AR_WQ_default_units.pop(field)
+                        c_AR_WQ_native_freq[s_new_field] = c_AR_WQ_native_freq.pop(field)
+
 
                     if field in c_s_CALSIMII_target_ts_list:
                         # what we will rename to
@@ -447,6 +495,8 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                         c_s_CALSIMII_target_ts_list.pop(field)
                         c_s_CALSIMII_default_units[s_new_field] = c_s_CALSIMII_default_units[field]
                         c_s_CALSIMII_default_units.pop(field)
+                        c_s_CALSIMII_native_freq[s_new_field] = c_s_CALSIMII_native_freq.pop(field)
+
                     if field in c_a_CALSIMII_target_ts_list:
                         # what we will rename to
                         s_new_field = field + ' AR in'
@@ -459,6 +509,8 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                         c_a_CALSIMII_target_ts_list.pop(field)
                         c_a_CALSIMII_default_units[s_new_field] = c_a_CALSIMII_default_units[field]
                         c_a_CALSIMII_default_units.pop(field)
+                        c_a_CALSIMII_native_freq[s_new_field] = c_a_CALSIMII_native_freq.pop(field)
+
 
                 # Crop the calsim results to the rows with all non-nans
                 df_calsim_SV_result.dropna(how='any', inplace=True)
@@ -501,10 +553,18 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                 c_default_units_all.update(c_s_CALSIMII_default_units)
                 c_default_units_all.update(c_a_CALSIMII_default_units)
 
+                # add native freq to store
+                c_native_freq_all.update(c_calsim_SV_native_freq)
+                c_native_freq_all.update(c_calsim_DV_native_freq)
+                c_native_freq_all.update(c_SR_WQ_native_freq)
+                c_native_freq_all.update(c_AR_WQ_native_freq)
+                c_native_freq_all.update(c_s_CALSIMII_native_freq)
+                c_native_freq_all.update(c_a_CALSIMII_native_freq)
+
                 results[run[0]] = df_all_data
             elif s_module == 'salinity':
-                df_flow_result, c_flow_target_ts_list, c_flow_default_units = single_file_pull(run[1]['flow'], c_field_list, run[0], s_module)
-                df_ec_result, c_ec_target_ts_list, c_ec_default_units = single_file_pull(run[1]['ec'], c_field_list, run[0], s_module)
+                df_flow_result, c_flow_target_ts_list, c_flow_default_units, c_flow_native_freq = single_file_pull(run[1]['flow'], c_field_list, run[0], s_module, s_native_freq='monthly')
+                df_ec_result, c_ec_target_ts_list, c_ec_default_units, c_ec_native_freq = single_file_pull(run[1]['ec'], c_field_list, run[0], s_module, s_native_freq='monthly')
 
                 # Combine the data from all the DSS files
                 # Keep everything from one data frame but other fields from the rest, so we only have one copy of dat/Year/Month/etc.
@@ -531,10 +591,13 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                 # add units into dictionary to store
                 c_default_units_all.update(c_flow_default_units)
                 c_default_units_all.update(c_ec_default_units)
+                # add native freq to dictionary
+                c_native_freq_all.update(c_flow_native_freq)
+                c_native_freq_all.update(c_ec_native_freq)
 
                 results[run[0]] = df_all_data
             elif s_module == 'hydro_out':
-                df_all_data, c_target_ts_list, c_default_units = single_file_pull(run[1], c_field_list, run[0], s_module)
+                df_all_data, c_target_ts_list, c_default_units, c_native_freq = single_file_pull(run[1], c_field_list, run[0], s_module, s_native_freq='monthly')
 
                 #assume all monthly data
                 df_all_data.dropna(how='any', inplace=True)
@@ -558,16 +621,21 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
 
                 #add to dictionary to store
                 c_default_units_all.update(c_default_units)
+                c_native_freq_all.update(c_native_freq)
                 results[run[0]] = df_all_data
-            elif s_module == 'hydro_in': #only ET and Ref ETo files right now
-                df_et_result, c_et_target_ts_list, c_et_default_units = single_file_pull(run[1]['et'], c_field_list,
-                                                                                         run[0], s_module)
-                df_eto_result, c_eto_target_ts_list, c_eto_default_units = single_file_pull(run[1]['eto'], c_field_list,
-                                                                                            run[0], s_module)
+            elif s_module == 'hydro_in': #only ET, Ref ETo, and daily precip files right now
 
+                # split the shared field list by suffix so each file only gets asked for its own fields
+                c_et_fields = {field: desc for field, desc in c_field_list.items() if field.endswith('_ET')}
+                c_eto_fields = {field: desc for field, desc in c_field_list.items() if field.endswith('_REFETO')}
+                c_precip_fields = {field: desc for field, desc in c_field_list.items() if field.endswith('_PRECIP')}
+
+                df_et_result, c_et_target_ts_list, c_et_default_units, c_et_native_freq = single_file_pull(run[1]['et'], c_et_fields, run[0], s_module, s_native_freq='monthly')
+                df_eto_result, c_eto_target_ts_list, c_eto_default_units, c_eto_native_freq = single_file_pull(run[1]['eto'], c_eto_fields, run[0], s_module, s_native_freq='monthly')
+                df_precip_result, c_precip_target_ts_list, c_precip_default_units, c_precip_native_freq = single_file_pull(run[1]['precip'], c_precip_fields, run[0], s_module, s_native_freq='daily')
                 # Combine the data from all the DSS files
                 # Keep everything from one data frame but other fields from the rest, so we only have one copy of dat/Year/Month/etc.
-                df_all_data = pd.concat([df_et_result, df_eto_result], axis=1, join='outer')
+                df_all_data = pd.concat([df_et_result, df_eto_result, df_precip_result], axis=1, join='outer')
 
                 # Add in the columns not pulled from the DSS file
                 i_month = df_all_data.index.month
@@ -584,12 +652,17 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
                 df_all_data = pd.concat([df_new_cols, df_all_data], axis=1)
 
                 # combine all field lists together
-                c_field_list_curr = c_et_target_ts_list | c_eto_target_ts_list
+                c_field_list_curr = c_et_target_ts_list | c_eto_target_ts_list | c_precip_target_ts_list
                 c_field_list_final.update(c_field_list_curr)
 
                 # add units into dictionary to store
                 c_default_units_all.update(c_et_default_units)
                 c_default_units_all.update(c_eto_default_units)
+                c_default_units_all.update(c_precip_default_units)
+                # add native freq to dictionary to store
+                c_native_freq_all.update(c_et_native_freq)
+                c_native_freq_all.update(c_eto_native_freq)
+                c_native_freq_all.update(c_precip_native_freq)
 
                 results[run[0]] = df_all_data
     # else:
@@ -627,6 +700,7 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
         for field in ls_fields_remove:
             c_field_list_final.pop(field)
             c_default_units_all.pop(field)
+            c_native_freq_all.pop(field, None)
             for run in results:
                 results[run].drop(field, axis=1, inplace=True, errors='ignore')
 
@@ -635,10 +709,11 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
 
     # add calculated fields
     for i in range(len(runs)):
-        results[runs[i][0]], c_field_list_temp, c_default_units_temp = calculated_fields(results[runs[i][0]], c_field_list_final, c_default_units_all)
+        results[runs[i][0]], c_field_list_temp, c_default_units_temp, c_native_freq_temp = calculated_fields(results[runs[i][0]], c_field_list_final, c_default_units_all, c_native_freq_all)
 
     c_field_list_final = c_field_list_temp
     c_default_units_all = c_default_units_temp
+    c_native_freq_all = c_native_freq_temp
 
     for i in range(len(runs)):
         append_list.append(results[runs[i][0]])
@@ -664,10 +739,10 @@ def file_reader(runs: list[list], c_field_list, s_comparison, s_module):
         elif s_module == 'hydro_out':
             c_default_units_all[run_name] = path.basename(file_name)
 
-    return append_list, baseline_stack, c_default_units_all, c_field_list_final
+    return append_list, baseline_stack, c_default_units_all, c_field_list_final, c_native_freq_all
 
 
-def calculated_fields(df_all, c_field_list, c_default_units):
+def calculated_fields(df_all, c_field_list, c_default_units, c_native_freq):
     """
     Calculates calculated fields
 
@@ -679,6 +754,8 @@ def calculated_fields(df_all, c_field_list, c_default_units):
         Dictionary of fields and descriptions
     c_default_units: dict
             Dictionary of default units for each field
+    c_native_freq: dict
+        Dictionary of native frequencies for each field
 
     Returns
     -------
@@ -688,12 +765,15 @@ def calculated_fields(df_all, c_field_list, c_default_units):
         Dictionary of fields and descriptions with calculated fields
     c_default_units: dict
             Dictionary of default units for each field with calculated fields
+    c_native_freq: dict
+        Dictionary of native frequencies for each field with calculated fields
     """
     # Copy input dictionaries
     c_field_list_curr = c_field_list.copy()
     c_default_units_curr = c_default_units.copy()
+    c_native_freq_curr = (c_native_freq or {}).copy()
 
-    # dictionary of what fields each calculated field needs TODO specify which are for which calview version
+    # dictionary of what fields each calculated field needs
     c_fields_for_calculated = {
         'Total System Storage SWP and CVP': ['S_TRNTY', 'S_SHSTA', 'S_OROVL', 'S_FOLSM', 'S_SLUIS_CVP', 'S_SLUIS_SWP'],
         'Total Exports SWP and CVP': ['C_CAA003_SWP', 'C_DMC003', 'C_CAA003_CVP'],
@@ -737,6 +817,10 @@ def calculated_fields(df_all, c_field_list, c_default_units):
 
             # add the default units
             c_default_units_curr[calculated_field] = ls_units[0]
+
+            # add native freq
+            ls_input_freqs = [c_native_freq_curr.get(var, 'monthly') for var in sl_needed_fields]
+            c_native_freq_curr[calculated_field] = 'daily' if 'daily' in ls_input_freqs else 'monthly'
 
             # add the new calculated variable to the field list dictionary
             c_field_list_curr[calculated_field] = calculated_field + ' (Calculated Field)'
@@ -784,6 +868,8 @@ def calculated_fields(df_all, c_field_list, c_default_units):
                     # also add FolSpill and CVP spill to the fields
                     c_default_units_curr['FolSpill'] = c_default_units_curr['ShaSpill']
                     c_default_units_curr['CVPSpill'] = c_default_units_curr['ShaSpill']
+                    c_native_freq_curr['FolSpill'] = c_native_freq_curr['ShaSpill']
+                    c_native_freq_curr['CVPSpill'] = c_native_freq_curr['ShaSpill']
                     c_field_list_curr['FolSpill'] = 'FolSpill (Calculated Field)'
                     c_field_list_curr['CVPSpill'] = 'CVPSpill (Calculated Field)'
 
@@ -794,6 +880,7 @@ def calculated_fields(df_all, c_field_list, c_default_units):
                     # We don't actually want Cold Water Profiles Shasta as a field, so first we remove it
                     c_field_list_curr.pop(calculated_field)
                     c_default_units_curr.pop(calculated_field)
+                    c_native_freq_curr.pop(calculated_field, None)
 
                     # first add all of them in as fields with units of TAF
                     ls_cold_water_field = ['<45 (Shasta)', '45-50 (Shasta)', '50-55 (Shasta)', '55-60 (Shasta)', '60-65 (Shasta)', '65-70 (Shasta)', '70+ (Shasta)',
@@ -801,6 +888,7 @@ def calculated_fields(df_all, c_field_list, c_default_units):
                     for field in ls_cold_water_field:
                         c_field_list_curr[field] = field
                         c_default_units_curr[field] = 'TAF'
+                        c_native_freq_curr[field] = 'daily'
 
                     # now we actually calculate them for shasta
                     df_all['<45 (Shasta)'] = df_all['Stor-Temp/Stor-Temp/Storage.lt.45.00F SR'] / 1000
@@ -824,6 +912,7 @@ def calculated_fields(df_all, c_field_list, c_default_units):
                     for field in sl_needed_fields:
                         c_field_list_curr.pop(field)
                         c_default_units_curr.pop(field)
+                        c_native_freq_curr.pop(field, None)
 
                     # drop from the dataframe as well
                     df_all.drop(sl_needed_fields, axis=1, inplace=True)
@@ -860,8 +949,9 @@ def calculated_fields(df_all, c_field_list, c_default_units):
             # add to field list and units dictionaries
             c_field_list_curr[combined_field] = f'DP {zone} (Calculated Field)'
             c_default_units_curr[combined_field] = ext_unit
+            c_native_freq_curr[combined_field] = 'monthly'
 
     # defragment the frame after many individual column insertions above
     df_all = df_all.copy()
 
-    return df_all, c_field_list_curr, c_default_units_curr
+    return df_all, c_field_list_curr, c_default_units_curr, c_native_freq_curr
